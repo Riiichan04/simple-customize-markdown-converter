@@ -1,7 +1,28 @@
-# Simple Markdown converter
-This simple library help you convert Markdown to HTML
+# Simple Custom Markdown Converter
+This simple library help you convert Markdown to HTML and customize it.
+
+## Feature
+Currently, this lib only supports:
+- Headings (#, ##, …)
+- Paragraphs
+- Bold (\*\*text\*\*)
+- Italic (\*text\* or \_text\_)
+- Inline code (\`code\`)
+- Code blocks (\`\`\`lang ... \`\`\`)
+
+And customizable renderer for all elements
 
 ## Install
+#### 1. Clone repository
+```bash
+git clone https://github.com/Riiichan04/simple-custom-markdown-converter.git
+cd simple-custom-markdown-converter
+```
+
+#### 2. Install dependencies
+```bash
+npm install
+```
 
 ## Usage
 #### 1. Convert markdown to HTML
@@ -51,15 +72,3 @@ Output:
 <h5 class="custom-h1">Title</h5>
 <div class="paragraph">Hello <b class="bold-text">World</b></div>
 ```
-
-
-## Feature
-Currently, this lib only supports:
-- Headings (#, ##, …)
-- Paragraphs
-- Bold (\*\*text\*\*)
-- Italic (\*text\* or \_text\_)
-- Inline code (\`code\`)
-- Code blocks (\`\`\`lang ... \`\`\`)
-
-And customizable renderer for all elements
