@@ -1,3 +1,19 @@
+/**
+ * AST (Abstract Syntax Tree) node definition.
+ * 
+ * Each node represents a Markdown construct and some special nodes (Document, Paragraph).
+ * Some nodes are containers (have `children`), while others are leaf nodes (contain text).
+ * 
+ * Variants:
+ * - Document: Root node, contains all other nodes.
+ * - Paragraph: A block of text, contain inline nodes.
+ * - Header: A header with given `level` (1-6)
+ * - Bold: Bold text
+ * - Italic: Italic text
+ * - InlineCode: Inline code snippet, with `content`
+ * - CodeBlock: A code block, with `lang` and `content`
+ * - Text: Raw text content.
+ */
 export type Node =
   | { type: "Document"; children: Node[] }
   | { type: "Paragraph"; children: Node[] }

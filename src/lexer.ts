@@ -9,24 +9,10 @@ export default class Lexer {
         this.input = input
     }
 
-    //Get current character with offset
-    peek(offset: number = 0) {
-        const i = this.pos + offset
-        return i < this.input.length ? this.input[i] : null
-    }
-
-    next(amount: number = 1) {
-        this.pos += amount
-    }
-
-    startsWith(str: string): boolean {
-        return this.input.slice(this.pos, this.pos + str.length) === str
-    }
-
-    isEndOfFile(): boolean {
-        return this.pos >= this.input.length
-    }
-
+    /**
+     * Tokenize the markdown into a list of tokens.
+     * @returns List of tokens
+     */
     tokenize(): Token[] {
         const TOKEN_HANDLER = [
             { match: (lex: Lexer) => lex.startsWith("```"), emit: (lex: Lexer) => lex.handleCodeBlock() },
@@ -55,11 +41,32 @@ export default class Lexer {
         return this.listToken
     }
 
-    getLastToken(): Token {
+
+    //Get current character with offset
+    private peek(offset: number = 0) {
+        const i = this.pos + offset
+        return i < this.input.length ? this.input[i] : null
+    }
+
+    //Move cursor by amount
+    private next(amount: number = 1) {
+        this.pos += amount
+    }
+
+    //If current cursor startsWith given str
+    private startsWith(str: string): boolean {
+        return this.input.slice(this.pos, this.pos + str.length) === str
+    }
+
+    private isEndOfFile(): boolean {
+        return this.pos >= this.input.length
+    }
+
+    private getLastToken(): Token {
         return this.listToken[this.listToken.length - 1]
     }
 
-    handleHeader(): void {
+    private handleHeader(): void {
         const lastToken: Token = this.getLastToken()
         if (!lastToken || lastToken.type === "NewLine") {
             this.listToken.push({ type: "Header", level: 1 })
@@ -76,8 +83,7 @@ export default class Lexer {
         }
     }
 
-    //Temp
-    handleCodeBlock() {
+    private handleCodeBlock() {
         let lang = ""
         let content = ""
 
@@ -99,7 +105,7 @@ export default class Lexer {
         this.listToken.push({ "type": "CodeBlock", lang: lang.trim(), content: content })
     }
 
-    handleTextBlock() {
+    private handleTextBlock() {
         const currentChar = this.peek()
         if (currentChar === null) return
         const lastToken = this.getLastToken()
@@ -108,16 +114,16 @@ export default class Lexer {
         else this.listToken.push({ type: "Text", value: currentChar })
     }
 
-    handleItalic() {
+    private handleItalic() {
         this.listToken.push({ type: "Italic" })
     }
 
-    handleBold() {
+    private handleBold() {
         this.listToken.push({ type: "Bold" })
         this.next() //Skip *
     }
 
-    handleInlineBlock() {
+    private handleInlineBlock() {
         let content = ""
         this.next() //Skip open block
         while (!this.isEndOfFile() && !this.startsWith("`")) {

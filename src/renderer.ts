@@ -1,8 +1,5 @@
 import { Node } from "./node"
-
-export type RenderOption = {
-    elements?: Partial<Record<Node["type"], (node: any, children: string[]) => string>>
-}
+import { RenderOption } from "./renderOptions"
 
 export default class Renderer {
     option: RenderOption
@@ -11,6 +8,12 @@ export default class Renderer {
         this.option = option
     }
 
+    /**
+     * Render a Node (AST) to a HTML string according renderer options
+     * 
+     * @param node - The abstract syntax tree (AST) from the Parser
+     * @returns The rendered HTML string.
+     */
     render(node: Node): string {
         //Get proper handler type
         const handler = this.handleRender(node.type)

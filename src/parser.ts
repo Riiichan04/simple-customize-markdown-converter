@@ -9,20 +9,10 @@ export class Parser {
         this.listToken = listToken
     }
 
-    peek(offset: number = 0): Token | null {
-        const i = this.pos + offset
-        return i < this.listToken.length ? this.listToken[i] : null
-    }
-
-    next(amount: number = 1): void {
-        this.pos += amount
-    }
-
-    isEnd(): boolean {
-        return this.peek()?.type === "EOF"
-    }
-
-    //Entry point
+    /**
+     * Parse a list token to a node
+     * @return A parsed abstract syntax tree (AST)
+     */
     parse(): Node {
         return {
             type: "Document",
@@ -30,7 +20,20 @@ export class Parser {
         }
     }
 
-    parseBlocks(): Node[] {
+    private peek(offset: number = 0): Token | null {
+        const i = this.pos + offset
+        return i < this.listToken.length ? this.listToken[i] : null
+    }
+
+    private next(amount: number = 1): void {
+        this.pos += amount
+    }
+
+    private isEnd(): boolean {
+        return this.peek()?.type === "EOF"
+    }
+
+    private parseBlocks(): Node[] {
         const listNode: Node[] = []
         while (!this.isEnd()) {
             const currentNode = this.peek()
@@ -56,14 +59,14 @@ export class Parser {
         return listNode
     }
 
-    parseParagraph(): Node {
+    private parseParagraph(): Node {
         return {
             type: "Paragraph",
             children: this.parseInlineUntil("NewLine")
         }
     }
 
-    parseCodeBlock(): Node {
+    private parseCodeBlock(): Node {
         const tok = this.peek()
         return {
             type: "CodeBlock",
@@ -72,7 +75,7 @@ export class Parser {
         }
     }
 
-    parseHeader(): Node {
+    private parseHeader(): Node {
         const currentNode = this.peek()
         this.next()
         return {
@@ -82,17 +85,17 @@ export class Parser {
         }
     }
 
-    parseBold(): Node {
+    private parseBold(): Node {
         this.next() // skip marker
         return { type: "Bold", children: this.parseInlineUntil("Bold") }
     }
 
-    parseItalic(): Node {
+    private parseItalic(): Node {
         this.next() // skip marker
         return { type: "Italic", children: this.parseInlineUntil("Italic") }
     }
 
-    parseInlineCode(): Node {
+    private parseInlineCode(): Node {
         const tok = this.peek()
         this.next()
         return {
@@ -101,7 +104,7 @@ export class Parser {
         }
     }
 
-    parseInlineUntil(stopType: Token["type"]): Node[] {
+    private parseInlineUntil(stopType: Token["type"]): Node[] {
         const listNode: Node[] = []
         while (!this.isEnd() && this.peek()?.type !== stopType) {
             const currentNode = this.peek()
