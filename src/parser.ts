@@ -1,5 +1,5 @@
-import { Node } from "./node";
-import { Token } from "./token";
+import { Node } from "./types/node";
+import { Token } from "./types/token";
 
 export class Parser {
     listToken: Token[]

@@ -1,5 +1,5 @@
-import { Node } from "./node"
-import { RenderOption } from "./renderOptions"
+import { Node } from "./types/node"
+import { RenderOption } from "./types/renderOptions"
 
 export default class Renderer {
     option: RenderOption

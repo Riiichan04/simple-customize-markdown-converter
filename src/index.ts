@@ -1,7 +1,9 @@
 import Lexer from "./lexer";
 import { Parser } from "./parser";
 import Renderer from "./renderer";
-import { RenderOption } from "./renderOptions";
+import { RenderOption } from "./types/renderOptions";
+
+export { RenderOption }
 
 /**
  * Convert a Markdown string into HTML.

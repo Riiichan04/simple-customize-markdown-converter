@@ -1,4 +1,4 @@
-import { Token } from "./token"
+import { Token } from "./types/token"
 
 export default class Lexer {
     input: string
