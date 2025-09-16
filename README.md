@@ -13,15 +13,8 @@ Currently, this lib only supports:
 And customizable renderer for all elements
 
 ## Install
-#### 1. Clone repository
 ```bash
-git clone https://github.com/Riiichan04/simple-custom-markdown-converter.git
-cd simple-custom-markdown-converter
-```
-
-#### 2. Install dependencies
-```bash
-npm install
+npm install simple-custom-markdown-converter
 ```
 
 ## Usage
