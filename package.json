@@ -1,16 +1,25 @@
 {
   "name": "simple-custom-markdown-converter",
-  "version": "1.0.0",
+  "version": "1.0.1",
+  "description": "Convert Markdown to your customize HTML",
+  "keywords": [
+    "markdown",
+    "html",
+    "converter"
+  ],
+  "author": "Regiko04",
+  "license": "MIT",
   "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "test": "jest",
     "build": "tsc",
     "start": "ts-node src/index.ts"
   },
-  "keywords": ["markdown", "html", "converter"],
-  "author": "Riiichan04",
-  "license": "MIT",
-  "description": "Convert Markdown to your customize HTML",
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^24.3.3",
@@ -18,5 +27,13 @@
     "ts-jest": "^29.4.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Riiichan04/simple-custom-markdown-converter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Riiichan04/simple-custom-markdown-converter/issues"
+  },
+  "homepage": "https://github.com/Riiichan04/simple-custom-markdown-converter#readme"
 }
