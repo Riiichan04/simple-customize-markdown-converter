@@ -14,7 +14,7 @@ And customizable renderer for all elements
 
 ## Install
 ```bash
-npm install simple-custom-markdown-converter
+npm install simple-customize-markdown-converter
 ```
 
 ## Usage

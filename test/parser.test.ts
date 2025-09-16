@@ -50,9 +50,9 @@ describe("Parser", () => {
     test("Parse bold inside paragraph", () => {
         const tokens: Token[] = [
             { type: "Text", value: "hello " },
-            { type: "Bold" }, // mở bold
+            { type: "Bold" },
             { type: "Text", value: "world" },
-            { type: "Bold" }, // đóng bold
+            { type: "Bold" },
             { type: "NewLine" },
             { type: "EOF" },
         ]
