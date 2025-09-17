@@ -56,6 +56,10 @@ export class Parser {
                     listNode.push(this.parseImage())
                     break
                 }
+                case "HorizontalLine": {
+                    listNode.push(this.parseHorizontalLine())
+                    break
+                }
                 case "NewLine": {
                     this.next() // skip
                     break
@@ -146,6 +150,12 @@ export class Parser {
             }
         }
         else return { type: "Image", src: "", alt: "" }
+    }
+
+    private parseHorizontalLine(): Node {
+        const tok = this.peek()
+        this.next() // skip marker
+        return { type: "HorizontalLine" }
     }
 
     private parseInlineUntil(stopType: Token["type"]): Node[] {

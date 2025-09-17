@@ -44,6 +44,7 @@ export default class Renderer {
             Image: (node) => `<img src="${node.src}" alt="${node.alt}"/>`,
             
             //Leaf nodes
+            HorizontalLine: (_node) => `<hr>`,
             Text: (node) => node.value,
         }
 

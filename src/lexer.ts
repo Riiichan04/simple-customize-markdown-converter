@@ -21,8 +21,12 @@ export default class Lexer {
                 match: (lex: Lexer) => lex.peek() === "\\" && lex.peek(1) !== undefined,
                 emit: (lex: Lexer) => {
                     lex.next(1);
-                    this.handleTextBlock()
+                    lex.handleTextBlock()
                 }
+            },
+            {
+                match: (lex: Lexer) => /^([-*_])\1{2,}$/.test(lex.peekUntil("\n").trim()) && this.getLastToken()?.type === "NewLine",
+                emit: (lex: Lexer) => lex.handleHorizontalLine()
             },
             { match: (lex: Lexer) => lex.startsWith("```"), emit: (lex: Lexer) => lex.handleCodeBlock() },
             { match: (lex: Lexer) => lex.startsWith("**"), emit: (lex: Lexer) => lex.handleBold() },
@@ -188,11 +192,29 @@ export default class Lexer {
 
     }
 
+    private handleHorizontalLine() {
+        this.next(2) //Skip two first characters, remain will be skiped after loop
+        this.listToken.push({ type: "HorizontalLine" })
+    }
+
+    //Utilities function
     private readUntil(char: string): string {
         let result = ""
         while (this.peek() !== char) {
             result += this.peek()
             this.next()
+        }
+        return result
+    }
+
+    private peekUntil(char: string): string {
+        let result = ""
+        let i = 0
+        while (true) {
+            const current = this.peek(i++)
+            if (current == null) break
+            if (current == char) break
+            result += current
         }
         return result
     }
