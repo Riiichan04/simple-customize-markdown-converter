@@ -17,8 +17,10 @@ This is a **simple** paragraph with a [link](https://example.com) and some \`inl
 \`\`\`js
 console.log("Hello World")
 \`\`\`
+~~justatext~~
+\\*thisis\\*escape character
 `
-        expect(convertMarkdownToHTML(md)).toBe('<h1>Hello everyone</h1><h4>Hello world</h4><p>This is a <strong>simple</strong> paragraph with a <a href="https://example.com">link</a> and some <code>inline code</code>.</p><blockquote><p> This is a blockquote.</p></blockquote><img src="image.png" alt="Alt text"/><pre><code class="lang-js">console.log("Hello World")</code></pre>'
+        expect(convertMarkdownToHTML(md)).toBe('<h1>Hello everyone</h1><h4>Hello world</h4><p>This is a <strong>simple</strong> paragraph with a <a href="https://example.com">link</a> and some <code>inline code</code>.</p><blockquote><p> This is a blockquote.</p></blockquote><img src="image.png" alt="Alt text"/><pre><code class="lang-js">console.log("Hello World")</code></pre><p><s>justatext</s></p><p>*thisis*escape character</p>'
         )
     })
 })

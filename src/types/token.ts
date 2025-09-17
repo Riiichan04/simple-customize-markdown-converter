@@ -24,6 +24,7 @@ export type Token =
     | { type: "Text", value: string }
     | { type: "Bold" }
     | { type: "Italic" }
+    | { type: "Strikethrough" }
     | { type: "InlineCode", content: string }
     | { type: "Quote" }
     | { type: "Link", text: string, href: string }

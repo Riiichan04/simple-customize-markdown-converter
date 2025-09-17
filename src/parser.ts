@@ -103,6 +103,11 @@ export class Parser {
         return { type: "Italic", children: this.parseInlineUntil("Italic") }
     }
 
+    private parseStrikethrough(): Node {
+        this.next() // skip marker
+        return { type: "Strikethrough", children: this.parseInlineUntil("Strikethrough") }
+    }
+
     private parseInlineCode(): Node {
         const tok = this.peek()
         this.next()
@@ -155,6 +160,10 @@ export class Parser {
                 }
                 case "Italic": {
                     listNode.push(this.parseItalic())
+                    break
+                }
+                case "Strikethrough": {
+                    listNode.push(this.parseStrikethrough())
                     break
                 }
                 case "InlineCode": {

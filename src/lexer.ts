@@ -16,8 +16,17 @@ export default class Lexer {
      */
     tokenize(): Token[] {
         const TOKEN_HANDLER = [
+            //Handle escape character first
+            {
+                match: (lex: Lexer) => lex.peek() === "\\" && lex.peek(1) !== undefined,
+                emit: (lex: Lexer) => {
+                    lex.next(1);
+                    this.handleTextBlock()
+                }
+            },
             { match: (lex: Lexer) => lex.startsWith("```"), emit: (lex: Lexer) => lex.handleCodeBlock() },
             { match: (lex: Lexer) => lex.startsWith("**"), emit: (lex: Lexer) => lex.handleBold() },
+            { match: (lex: Lexer) => lex.startsWith("~~"), emit: (lex: Lexer) => lex.handleStrikethrough() },
             { match: (lex: Lexer) => lex.peek() === "`", emit: (lex: Lexer) => lex.handleInlineBlock() },
             { match: (lex: Lexer) => lex.peek() === "#", emit: (lex: Lexer) => lex.handleHeader() },
             { match: (lex: Lexer) => lex.peek() === "*" || lex.peek() === "_", emit: (lex: Lexer) => lex.handleItalic() },
@@ -123,7 +132,12 @@ export default class Lexer {
 
     private handleBold() {
         this.listToken.push({ type: "Bold" })
-        this.next() //Skip *
+        this.next() //Skip remain *
+    }
+
+    private handleStrikethrough() {
+        this.listToken.push({ type: "Strikethrough" })
+        this.next() //Skip remain ~
     }
 
     private handleInlineBlock() {

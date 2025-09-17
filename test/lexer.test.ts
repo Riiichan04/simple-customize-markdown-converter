@@ -14,7 +14,7 @@ describe("Lexer", () => {
         const lexer = new Lexer("## Title")
         const tokens = lexer.tokenize()
         expect(tokens).toEqual([
-            { type: "Header", level: 2},
+            { type: "Header", level: 2 },
             { type: "Text", value: "Title" },
             { type: "EOF" },
         ])
@@ -82,6 +82,15 @@ describe("Lexer", () => {
             { type: "Text", value: ". " },
             { type: "InlineCode", content: "Very good" },
             { type: "EOF" },
+        ])
+    })
+
+    test("Tokenize with escape character", () => {
+        const input = "\\*This is escaped character\\*"
+        const token = new Lexer(input).tokenize()
+        expect(token).toEqual([
+            { type: "Text", value: "*This is escaped character*" },
+            { type: "EOF" }
         ])
     })
 })
