@@ -47,8 +47,13 @@ export class Parser {
                 case "CodeBlock": {
                     listNode.push(this.parseCodeBlock())
                     this.next()
-                }
                     break
+                }
+                case "Quote": {
+                    listNode.push(this.parseQuote())
+                    this.next()
+                    break
+                }
                 case "NewLine": {
                     this.next() // skip
                     break
@@ -102,6 +107,11 @@ export class Parser {
             type: "InlineCode",
             content: tok?.type === "InlineCode" ? tok.content : ""
         }
+    }
+
+    private parseQuote(): Node {
+        this.next() //skip marker
+        return { type: "Quote", children: this.parseInlineUntil("NewLine") }
     }
 
     private parseInlineUntil(stopType: Token["type"]): Node[] {

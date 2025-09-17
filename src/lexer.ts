@@ -20,6 +20,7 @@ export default class Lexer {
             { match: (lex: Lexer) => lex.peek() === "`", emit: (lex: Lexer) => lex.handleInlineBlock() },
             { match: (lex: Lexer) => lex.peek() === "#", emit: (lex: Lexer) => lex.handleHeader() },
             { match: (lex: Lexer) => lex.peek() === "*" || lex.peek() === "_", emit: (lex: Lexer) => lex.handleItalic() },
+            { match: (lex: Lexer) => lex.peek() === ">", emit: (lex: Lexer) => lex.handleQuoteBlock() },
             { match: (lex: Lexer) => lex.peek() === "\n", emit: (lex: Lexer) => lex.listToken.push({ type: "NewLine" }) },
         ]
 
@@ -133,5 +134,9 @@ export default class Lexer {
 
         // this.next() //Skip close block
         this.listToken.push({ "type": "InlineCode", content: content })
+    }
+
+    private handleQuoteBlock() {
+        this.listToken.push({ type: "Quote" })
     }
 }

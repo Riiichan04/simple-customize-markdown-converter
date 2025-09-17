@@ -12,6 +12,7 @@
  * - Bold: Bold marker (`**`).
  * - Italic: Italic marker (`*` or `_`).
  * - InlineCode: Inline code snippet (`` ` ``), with its `content`.
+ * - QUote: A quote block (`>`).
  * - EOF: A special token, this is the end of input.
  */
 export type Token =
@@ -22,4 +23,5 @@ export type Token =
     | { type: "Bold" }
     | { type: "Italic" }
     | { type: "InlineCode", content: string }
+    | { type: "Quote" }
     | { type: "EOF" }
