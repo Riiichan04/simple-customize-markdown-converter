@@ -32,6 +32,8 @@ export default class Renderer {
             Bold: (_node, children) => `<strong>${children.join("")}</strong>`,
             Italic: (_node, children) => `<em>${children.join("")}</em>`,
             Quote: (_node, children) => `<blockquote>${children.join("")}</blockquote>`,
+            Link: (node) => `<a href="${node.href}">${node.text}</a>`,
+            Image: (node) => `<img src="${node.src}" alt="${node.alt}"/>`,
             Text: (node) => node.value,
         }
 

@@ -12,7 +12,9 @@
  * - Bold: Bold marker (`**`).
  * - Italic: Italic marker (`*` or `_`).
  * - InlineCode: Inline code snippet (`` ` ``), with its `content`.
- * - QUote: A quote block (`>`).
+ * - Quote: A quote block (`>`).
+ * - Link: A link (`[text](url)`)
+ * - Image: An image (`![alt](url)`)
  * - EOF: A special token, this is the end of input.
  */
 export type Token =
@@ -24,4 +26,6 @@ export type Token =
     | { type: "Italic" }
     | { type: "InlineCode", content: string }
     | { type: "Quote" }
+    | { type: "Link", text: string, href: string }
+    | { type: "Image", src: string, alt: string }
     | { type: "EOF" }

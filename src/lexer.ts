@@ -1,3 +1,4 @@
+import { emit } from "process"
 import { Token } from "./types/token"
 
 export default class Lexer {
@@ -21,6 +22,8 @@ export default class Lexer {
             { match: (lex: Lexer) => lex.peek() === "#", emit: (lex: Lexer) => lex.handleHeader() },
             { match: (lex: Lexer) => lex.peek() === "*" || lex.peek() === "_", emit: (lex: Lexer) => lex.handleItalic() },
             { match: (lex: Lexer) => lex.peek() === ">", emit: (lex: Lexer) => lex.handleQuoteBlock() },
+            { match: (lex: Lexer) => lex.peek() === "[", emit: (lex: Lexer) => lex.handleLink() },
+            { match: (lex: Lexer) => lex.peek() === "!" && lex.peek(1) === "[", emit: (lex: Lexer) => lex.handleImage() },
             { match: (lex: Lexer) => lex.peek() === "\n", emit: (lex: Lexer) => lex.listToken.push({ type: "NewLine" }) },
         ]
 
@@ -68,20 +71,19 @@ export default class Lexer {
     }
 
     private handleHeader(): void {
-        const lastToken: Token = this.getLastToken()
-        if (!lastToken || lastToken.type === "NewLine") {
-            this.listToken.push({ type: "Header", level: 1 })
-        }
-        else if (lastToken.type === "Header") {
-            lastToken.level++
-        }
+        let level = 0
 
-        this.next()
+        while (this.peek() === "#") {
+            level++
+            this.next()
+        }
 
         if (this.peek() === " ") {
             this.next()
             this.pos--
         }
+
+        this.listToken.push({ type: "Header", level })
     }
 
     private handleCodeBlock() {
@@ -103,7 +105,7 @@ export default class Lexer {
 
         this.next(2) //Skip close block (due to next() after each tokenize iteration)
 
-        this.listToken.push({ "type": "CodeBlock", lang: lang.trim(), content: content })
+        this.listToken.push({ "type": "CodeBlock", lang: lang.trim(), content: content.trimEnd() })
     }
 
     private handleTextBlock() {
@@ -138,5 +140,46 @@ export default class Lexer {
 
     private handleQuoteBlock() {
         this.listToken.push({ type: "Quote" })
+    }
+
+    private handleLink() {
+        this.next() //Skip [
+        const text = this.readUntil("]")
+        this.next() //Skip ]
+
+        if (this.peek() === "(") {
+            this.next() //Skip (
+            const url = this.readUntil(")")
+            //Don't skip ) due to auto skip on while loop
+            this.listToken.push({ type: "Link", text: text, href: url })
+        }
+        else this.listToken.push({ type: "Text", value: `[${text}]` })
+    }
+
+    private handleImage() {
+        this.next() //Skip !
+        if (this.peek() !== "[") return
+
+        this.next() //Skip [
+        const alt = this.readUntil("]")
+        this.next() //Skip ]
+
+        if (this.peek() === "(") {
+            this.next() //Skip (
+            const src = this.readUntil(")")
+            this.next() //Skip )
+            this.listToken.push({ type: "Image", alt: alt, src: src })
+        }
+        else this.listToken.push({ type: "Text", value: `![${alt}]` })
+
+    }
+
+    private readUntil(char: string): string {
+        let result = ""
+        while (this.peek() !== char) {
+            result += this.peek()
+            this.next()
+        }
+        return result
     }
 }

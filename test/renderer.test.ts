@@ -87,4 +87,39 @@ describe("Renderer", () => {
         const renderer = new Renderer({})
         expect(renderer.render(node)).toBe("<blockquote><p>Hello?. This is a quote</p><p>And here is a quote too</p></blockquote>")
     })
+
+    test("Render link", () => {
+        const node: Node = {
+            type: "Paragraph",
+            children: [
+                { type: "Text", value: "Check this " },
+                {
+                    type: "Link",
+                    href: "https://google.com",
+                    text: "Google"
+                },
+                { type: "Text", value: " link" }
+            ]
+        }
+        const renderer = new Renderer({})
+        expect(renderer.render(node))
+            .toBe('<p>Check this <a href="https://google.com">Google</a> link</p>')
+    })
+
+    test("Render image", () => {
+        const node: Node = {
+            type: "Paragraph",
+            children: [
+                { type: "Text", value: "Here is an image: " },
+                {
+                    type: "Image",
+                    src: "https://example.com/img.png",
+                    alt: "Example image"
+                }
+            ]
+        }
+        const renderer = new Renderer({})
+        expect(renderer.render(node))
+            .toBe('<p>Here is an image: <img src="https://example.com/img.png" alt="Example image"/></p>')
+    })
 })
