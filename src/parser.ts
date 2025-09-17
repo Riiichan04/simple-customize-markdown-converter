@@ -46,9 +46,16 @@ export class Parser {
                 }
                 case "CodeBlock": {
                     listNode.push(this.parseCodeBlock())
-                    this.next()
-                }
                     break
+                }
+                case "Quote": {
+                    listNode.push(this.parseQuote())
+                    break
+                }
+                case "Image": {
+                    listNode.push(this.parseImage())
+                    break
+                }
                 case "NewLine": {
                     this.next() // skip
                     break
@@ -68,6 +75,7 @@ export class Parser {
 
     private parseCodeBlock(): Node {
         const tok = this.peek()
+        this.next()
         return {
             type: "CodeBlock",
             lang: tok?.type === "CodeBlock" ? tok.lang : "",
@@ -104,6 +112,37 @@ export class Parser {
         }
     }
 
+    private parseQuote(): Node {
+        this.next() //skip marker
+        return { type: "Quote", children: [{ type: "Paragraph", children: this.parseInlineUntil("NewLine") }] }
+    }
+
+    private parseLink(): Node {
+        const tok = this.peek()
+        this.next()
+        if (tok?.type === "Link") {
+            return {
+                type: "Link",
+                href: tok.href,
+                text: tok.text
+            }
+        }
+        return { type: "Link", href: "", text: "" }
+    }
+
+    private parseImage(): Node {
+        const tok = this.peek()
+        this.next()
+        if (tok?.type === "Image") {
+            return {
+                type: "Image",
+                src: tok.src,
+                alt: tok.alt
+            }
+        }
+        else return { type: "Image", src: "", alt: "" }
+    }
+
     private parseInlineUntil(stopType: Token["type"]): Node[] {
         const listNode: Node[] = []
         while (!this.isEnd() && this.peek()?.type !== stopType) {
@@ -124,6 +163,12 @@ export class Parser {
                 }
                 case "Text": {
                     listNode.push({ type: "Text", value: currentNode.value })
+                    this.next()
+                    break
+                }
+                case "Link": {
+                    listNode.push(this.parseLink())
+                    break
                 }
                 default: this.next()
             }

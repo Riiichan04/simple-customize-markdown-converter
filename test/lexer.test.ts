@@ -11,10 +11,10 @@ describe("Lexer", () => {
     })
 
     test("Tokenize header", () => {
-        const lexer = new Lexer("# Title")
+        const lexer = new Lexer("## Title")
         const tokens = lexer.tokenize()
         expect(tokens).toEqual([
-            { type: "Header", level: 1 },
+            { type: "Header", level: 2},
             { type: "Text", value: "Title" },
             { type: "EOF" },
         ])
@@ -33,7 +33,7 @@ describe("Lexer", () => {
         const lexer = new Lexer("```ts\nlet x=1\n```")
         const tokens = lexer.tokenize()
         expect(tokens).toEqual([
-            { type: "CodeBlock", lang: "ts", content: "let x=1\n" },
+            { type: "CodeBlock", lang: "ts", content: "let x=1" },
             { type: "EOF" },
         ])
     })

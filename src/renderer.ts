@@ -31,7 +31,10 @@ export default class Renderer {
             CodeBlock: (node) => `<pre><code class="lang-${node.lang}">${this.escapeHtml(node.content)}</code></pre>`,
             Bold: (_node, children) => `<strong>${children.join("")}</strong>`,
             Italic: (_node, children) => `<em>${children.join("")}</em>`,
-            Text: (node) => node.value
+            Quote: (_node, children) => `<blockquote>${children.join("")}</blockquote>`,
+            Link: (node) => `<a href="${node.href}">${node.text}</a>`,
+            Image: (node) => `<img src="${node.src}" alt="${node.alt}"/>`,
+            Text: (node) => node.value,
         }
 
         return this.option.elements?.[type] ?? defaultRender[type]

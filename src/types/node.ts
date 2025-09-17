@@ -10,8 +10,11 @@
  * - Header: A header with given `level` (1-6)
  * - Bold: Bold text
  * - Italic: Italic text
- * - InlineCode: Inline code snippet, with `content`
- * - CodeBlock: A code block, with `lang` and `content`
+ * - InlineCode: Inline code snippet, with it's `content`
+ * - Quote: A quote block
+ * - CodeBlock: A code block, with it's `lang` and `content`
+ * - Link: A link, with it's `text` and `href`
+ * - Image: An image, with it's `src` and `alt`
  * - Text: Raw text content.
  */
 export type Node =
@@ -22,4 +25,7 @@ export type Node =
   | { type: "Italic"; children: Node[] }
   | { type: "InlineCode"; content: string }
   | { type: "CodeBlock"; lang: string; content: string }
+  | { type: "Quote"; children: Node[] }
+  | { type: "Link"; href: string; text: string }
+  | { type: "Image", src: string; alt: string }
   | { type: "Text"; value: string }
