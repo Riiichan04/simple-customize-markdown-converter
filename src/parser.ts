@@ -146,6 +146,10 @@ export class Parser {
                     result.children.push(this.parseListItem())
                     nextToken = this.peek()
                 }
+                else if (nextToken?.type === "TaskItem") {
+                    result.children.push(this.parseTaskItem())
+                    nextToken = this.peek()
+                }
                 else if (nextToken?.type === "ListEnd") {
                     this.next()
                     break
@@ -181,7 +185,7 @@ export class Parser {
             }
 
             if (["ListItem", "ListEnd"].includes(tok.type)) {
-                break 
+                break
             }
 
             children.push({
@@ -191,6 +195,42 @@ export class Parser {
         }
         return {
             type: "ListItem",
+            children: children
+        }
+    }
+
+    private parseTaskItem(): Node {
+        const currentToken = this.peek()
+        this.next() // skip marker   
+        const children: Node[] = []
+        // const children = this.parseInlineUntil("NewLine")
+        while (!this.isEnd()) {
+            const tok = this.peek()
+            if (!tok) break
+
+            if (tok.type === "NewLine") {
+                this.next()
+                continue
+            }
+
+            if (tok.type === "ListStart") {
+                children.push(this.parseList())
+                continue
+            }
+
+            if (["ListItem", "TaskItem", "ListEnd"].includes(tok.type)) {
+                break
+            }
+
+            children.push({
+                type: "Paragraph",
+                children: this.parseInlineUntil("NewLine")
+            })
+        }
+        
+        return {
+            type: "TaskItem",
+            checked: currentToken?.type === "TaskItem" ? currentToken.checked : false,
             children: children
         }
     }

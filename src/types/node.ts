@@ -15,7 +15,8 @@
  * - Quote: A quote block
  * - CodeBlock: A code block, with it's `lang` and `content`
  * - List: A list, with it's level and children
- * - ListItem: A item of a list, with it's children
+ * - ListItem: An item of a list, with it's children
+ * - TaskItem: An item for tasklist, with it's checked state
  * - Link: A link, with it's `text` and `href`
  * - Image: An image, with it's `src` and `alt`
  * - HorizontalLine: A horizontal line
@@ -33,6 +34,7 @@ export type Node =
   | { type: "Quote"; children: Node[] }
   | { type: "List"; ordered: boolean; level: number; children: Node[] }
   | { type: "ListItem"; children: Node[]; }
+  | { type: "TaskItem"; checked: boolean; children: Node[]}
   | { type: "Link"; href: string; text: string }
   | { type: "Image", src: string; alt: string }
   | { type: "HorizontalLine" }

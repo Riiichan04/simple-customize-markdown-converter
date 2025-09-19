@@ -30,10 +30,11 @@ export default class Renderer {
 
             //Container nodes
             CodeBlock: (node) => `<pre><code class="lang-${node.lang}">${this.escapeHtml(node.content)}</code></pre>`,
-            Header: (node, children) => `<h${node.level}>${children.join("")}</h${node.level}>`,
+            Header: (node, children) => `<h${node.level}${node.level <= 2 ? ' style="border-bottom: 1px solid #d1d9e0b3"' : ''}>${children.join("")}</h${node.level}>`,
             Quote: (_node, children) => `<blockquote>${children.join("")}</blockquote>`,
             List: (node, children) => node.ordered ? `<ol>${children.join("")}</ol>` : `<ul>${children.join("")}</ul>`,
             ListItem: (_node, children) => `<li>${children.join("")}</li>`,
+            TaskItem: (node, children) => `<li><input type="checkbox" disabled ${node.checked ? "checked" : ""}>${children.join("")}</li>`,
 
             //Styling nodes
             Bold: (_node, children) => `<strong>${children.join("")}</strong>`,

@@ -3,7 +3,7 @@ import { convertMarkdownToHTML } from "../src/index"
 describe("Test a whole markdown", () => {
     test("A single sentences", () => {
         const result = convertMarkdownToHTML("## Hello world\nThis is my time *OMG*")
-        expect(result).toBe("<h2>Hello world</h2><p>This is my time <em>OMG</em></p>")
+        expect(result).toBe("<h2 style=\"border-bottom: 1px solid #d1d9e0b3\">Hello world</h2><p>This is my time <em>OMG</em></p>")
     })
 
     test("Full document rendering", () => {
@@ -24,7 +24,7 @@ This is a text
 This is also a text
 --\\-
 `
-        expect(convertMarkdownToHTML(md)).toBe('<h1>Hello everyone</h1><h4>Hello world</h4><p>This is a <strong>simple</strong> paragraph with a <a href="https://example.com">link</a> and some <code>inline code</code>.</p><blockquote><p> This is a blockquote.</p></blockquote><img src="image.png" alt="Alt text"/><pre><code class="lang-js">console.log("Hello World")</code></pre><p><s>justatext</s></p><p>*thisis*escape character</p><p>This is a text</p><hr><p>This is also a text</p><p>---</p>'
+        expect(convertMarkdownToHTML(md)).toBe('<h1 style=\"border-bottom: 1px solid #d1d9e0b3\">Hello everyone</h1><h4>Hello world</h4><p>This is a <strong>simple</strong> paragraph with a <a href="https://example.com">link</a> and some <code>inline code</code>.</p><blockquote><p> This is a blockquote.</p></blockquote><img src="image.png" alt="Alt text"/><pre><code class="lang-js">console.log("Hello World")</code></pre><p><s>justatext</s></p><p>*thisis*escape character</p><p>This is a text</p><hr><p>This is also a text</p><p>---</p>'
         )
     })
 
@@ -56,5 +56,11 @@ This is also a text
         expect(convertMarkdownToHTML(md)).toBe(
             '<ul><li><p>Item 1</p><ol><li><p>Subitem 1.1</p></li><li><p>Subitem 1.2</p></li></ol></li><li><p>Item 2</p></li></ul>'
         )
+    })
+
+    test("Render task list", () => {
+        const md = "- [ ] Incomplete\n- [x] Complete"
+        expect(convertMarkdownToHTML(md))
+            .toBe('<ul><li><input type="checkbox" disabled ><p>Incomplete</p></li><li><input type="checkbox" disabled checked><p>Complete</p></li></ul>')
     })
 })

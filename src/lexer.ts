@@ -1,4 +1,3 @@
-import { emit } from "process"
 import { Token } from "./types/token"
 
 export default class Lexer {
@@ -35,14 +34,18 @@ export default class Lexer {
             { match: (lex: Lexer) => lex.startsWith("**"), emit: (lex: Lexer) => lex.handleBold() },
             { match: (lex: Lexer) => lex.startsWith("~~"), emit: (lex: Lexer) => lex.handleStrikethrough() },
             {
+                match: (lex: Lexer) => lex.isStartOfLine() && /^(\s*)([-*+]) \[( |x|X)\] /.test(lex.peekUntil("\n")),
+                emit: (lex: Lexer) => lex.handleList(false, true)
+            },
+            {
                 //Regex: if line started with zero or more spaces, then have - or + or * + 1 space
                 match: (lex: Lexer) => lex.isStartOfLine() && /^(\s*)([-*+]) /.test(lex.peekUntil("\n")),
-                emit: (lex: Lexer) => lex.handleList(false)
+                emit: (lex: Lexer) => lex.handleList(false, false)
             },
             {
                 //Regex: if line started with zero or more spaces, then have number. character + 1 space
                 match: (lex: Lexer) => lex.isStartOfLine() && /^(\s*)(\d+)\. /.test(lex.peekUntil("\n")),
-                emit: (lex: Lexer) => lex.handleList(true)
+                emit: (lex: Lexer) => lex.handleList(true, false)
             },
             {
                 match: (lex: Lexer) => lex.listLevelFlag > 0 && lex.isStartOfLine() && !/^(\s*)([-+*]|\d+\.) /.test(lex.peekUntil("\n")),
@@ -186,19 +189,31 @@ export default class Lexer {
         this.listToken.push({ type: "Quote" })
     }
 
-    private handleList(isOrdered: boolean) {
-        const line = this.peekUntil("\n")
-        //Regex: line started with: Group 1: zero or more spaces, group 2: (- or + or * + 1 space) or (number with . character), group 3: everything else in line
-        const m = isOrdered ? line.match(/^(\s*)(\d+)\. (.*)$/)! : line.match(/^(\s*)([-*+]) (.*)$/)!
-        const indent = Math.floor(m[1].length / 2) + 1  //m[1] to get the spaces in group 1
-        while (this.listLevelFlag < indent) {
-            this.handleStartList(isOrdered)
+    private handleList(isOrdered: boolean, isTask: boolean | null) {
+        if (isTask) {
+            const line = this.peekUntil("\n")
+            const m = line.match(/^(\s*)([-*+]) \[( |x|X)\] (.*)$/)!
+            const indent = Math.floor(m[1].length / 2) + 1
+            while (this.listLevelFlag < indent) this.handleStartList(false)
+            while (this.listLevelFlag > indent) this.handleEndList()
+
+            this.next(m[1].length + 4)
+            this.handleTaskItem(m[3].toLowerCase() === "x")
         }
-        while (this.listLevelFlag > indent) {
-            this.handleEndList()
+        else {
+            const line = this.peekUntil("\n")
+            //Regex: line started with: Group 1: zero or more spaces, group 2: (- or + or * + 1 space) or (number with . character), group 3: everything else in line
+            const m = isOrdered ? line.match(/^(\s*)(\d+)\. (.*)$/)! : line.match(/^(\s*)([-*+]) (.*)$/)!
+            const indent = Math.floor(m[1].length / 2) + 1  //m[1] to get the spaces in group 1
+            while (this.listLevelFlag < indent) {
+                this.handleStartList(isOrdered)
+            }
+            while (this.listLevelFlag > indent) {
+                this.handleEndList()
+            }
+            this.next(m[1].length + (isOrdered ? 1 : 0)) //+1 due to marker have 2 characters (e.g: 1.) instead 1 like unordered list
+            this.handleListItem()
         }
-        this.next(m[1].length + (isOrdered ? 1 : 0)) //+1 due to marker have 2 characters (e.g: 1.) instead 1 like unordered list
-        this.handleListItem()
     }
 
     private handleStartList(isOrder: boolean) {
@@ -209,6 +224,11 @@ export default class Lexer {
     private handleListItem() {
         this.next() // Skip space between - and text
         this.listToken.push({ type: "ListItem" })
+    }
+
+    private handleTaskItem(isChecked: boolean) {
+        this.next() // Skip space between last ] and text
+        this.listToken.push({ type: "TaskItem", checked: isChecked })
     }
 
     private handleEndList() {

@@ -15,6 +15,7 @@
  * - Quote: A quote block (`>`).
  * - ListStart: Start a list
  * - ListItem: A list's item (`* ` or `+ ` or `- ` or `number with dot`)
+ * - TaskItem: A task item in a list (`- [ ]` or `- [x]`)
  * - ListEnd: End a list
  * - Link: A link (`[text](url)`)
  * - Image: An image (`![alt](url)`)
@@ -33,6 +34,7 @@ export type Token =
     | { type: "Quote" }
     | { type: "ListStart", ordered: boolean, level: number }
     | { type: "ListItem" }
+    | { type: "TaskItem", checked: boolean }
     | { type: "ListEnd" }
     | { type: "Link", text: string, href: string }
     | { type: "Image", src: string, alt: string }
