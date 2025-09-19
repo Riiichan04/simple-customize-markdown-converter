@@ -14,7 +14,7 @@ describe("Lexer", () => {
         const lexer = new Lexer("## Title")
         const tokens = lexer.tokenize()
         expect(tokens).toEqual([
-            { type: "Header", level: 2},
+            { type: "Header", level: 2 },
             { type: "Text", value: "Title" },
             { type: "EOF" },
         ])
@@ -81,6 +81,35 @@ describe("Lexer", () => {
             { type: "Italic" },
             { type: "Text", value: ". " },
             { type: "InlineCode", content: "Very good" },
+            { type: "EOF" },
+        ])
+    })
+
+    test("Tokenize with escape character", () => {
+        const input = "\\*This is escaped character\\*"
+        const token = new Lexer(input).tokenize()
+        expect(token).toEqual([
+            { type: "Text", value: "*This is escaped character*" },
+            { type: "EOF" }
+        ])
+    })
+
+    test("Tokenize unordered list", () => {
+        const input = "- Item A\n- Item B\n- Item C";
+        const lexer = new Lexer(input);
+        const tokens = lexer.tokenize();
+
+        expect(tokens).toEqual([
+            { type: "ListStart", ordered: false, level: 1 },
+            { type: "ListItem" },
+            { type: "Text", value: "Item A" },
+            { type: "NewLine" },
+            { type: "ListItem" },
+            { type: "Text", value: "Item B" },
+            { type: "NewLine" },
+            { type: "ListItem" },
+            { type: "Text", value: "Item C" },
+            { type: "ListEnd" },
             { type: "EOF" },
         ])
     })

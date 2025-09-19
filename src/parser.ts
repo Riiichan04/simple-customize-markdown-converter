@@ -56,6 +56,14 @@ export class Parser {
                     listNode.push(this.parseImage())
                     break
                 }
+                case "HorizontalLine": {
+                    listNode.push(this.parseHorizontalLine())
+                    break
+                }
+                case "ListStart": {
+                    listNode.push(this.parseList())
+                    break
+                }
                 case "NewLine": {
                     this.next() // skip
                     break
@@ -103,6 +111,11 @@ export class Parser {
         return { type: "Italic", children: this.parseInlineUntil("Italic") }
     }
 
+    private parseStrikethrough(): Node {
+        this.next() // skip marker
+        return { type: "Strikethrough", children: this.parseInlineUntil("Strikethrough") }
+    }
+
     private parseInlineCode(): Node {
         const tok = this.peek()
         this.next()
@@ -115,6 +128,76 @@ export class Parser {
     private parseQuote(): Node {
         this.next() //skip marker
         return { type: "Quote", children: [{ type: "Paragraph", children: this.parseInlineUntil("NewLine") }] }
+    }
+
+    private parseList(): Node {
+        const tok = this.peek()
+        if (tok?.type === "ListStart") {
+            this.next() //skip marker
+            const result: Node = {
+                type: "List",
+                level: tok.level,
+                ordered: tok.ordered,
+                children: [],
+            }
+            let nextToken = this.peek()
+            while (!this.isEnd()) {
+                if (nextToken?.type === "ListItem" || nextToken?.type === "TaskItem") {
+                    result.children.push(this.parseListItem())
+                    nextToken = this.peek()
+                }
+                else if (nextToken?.type === "ListEnd") {
+                    this.next()
+                    break
+                }
+                else break
+            }
+
+            return result
+        }
+        //Temp return
+        return {
+            type: "Text",
+            value: ""
+        }
+    }
+
+    private parseListItem(): Node {
+        const currentToken = this.peek()
+        this.next() // skip marker   
+        const children: Node[] = []
+        while (!this.isEnd()) {
+            const tok = this.peek()
+            if (!tok) break
+
+            if (tok.type === "NewLine") {
+                this.next()
+                continue
+            }
+
+            if (tok.type === "ListStart") {
+                children.push(this.parseList())
+                continue
+            }
+
+            if (["ListItem", "TaskItem", "ListEnd"].includes(tok.type)) {
+                break
+            }
+
+            children.push({
+                type: "Paragraph",
+                children: this.parseInlineUntil("NewLine")
+            })
+        }
+
+        return currentToken?.type === "TaskItem" ? {
+            type: "TaskItem",
+            checked: currentToken.type === "TaskItem" ? currentToken.checked : false,
+            children: children
+        } : {
+            type: "ListItem",
+            children: children
+        }
     }
 
     private parseLink(): Node {
@@ -143,11 +226,20 @@ export class Parser {
         else return { type: "Image", src: "", alt: "" }
     }
 
-    private parseInlineUntil(stopType: Token["type"]): Node[] {
+    private parseHorizontalLine(): Node {
+        const tok = this.peek()
+        this.next() // skip marker
+        return { type: "HorizontalLine" }
+    }
+
+    private parseInlineUntil(stopType: Token["type"] | Token["type"][]): Node[] {
+        const stop = Array.isArray(stopType) ? stopType : [stopType]
         const listNode: Node[] = []
-        while (!this.isEnd() && this.peek()?.type !== stopType) {
+        while (!this.isEnd()) {
             const currentNode = this.peek()
             if (!currentNode) break
+            if (stop.includes(currentNode.type)) break
+
             switch (currentNode.type) {
                 case "Bold": {
                     listNode.push(this.parseBold())
@@ -155,6 +247,10 @@ export class Parser {
                 }
                 case "Italic": {
                     listNode.push(this.parseItalic())
+                    break
+                }
+                case "Strikethrough": {
+                    listNode.push(this.parseStrikethrough())
                     break
                 }
                 case "InlineCode": {

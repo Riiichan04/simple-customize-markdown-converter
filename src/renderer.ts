@@ -24,16 +24,30 @@ export default class Renderer {
 
     private handleRender(type: Node["type"]): (node: any, children: string[]) => string {
         const defaultRender: Record<Node["type"], (node: any, children: string[]) => string> = {
+            //Base structural nodes
             Document: (_node, children) => children.join(""),
             Paragraph: (_node, children) => `<p>${children.join("")}</p>`,
-            Header: (node, children) => `<h${node.level}>${children.join("")}</h${node.level}>`,
-            InlineCode: (node) => `<code>${this.escapeHtml(node.content)}</code>`,
+
+            //Container nodes
             CodeBlock: (node) => `<pre><code class="lang-${node.lang}">${this.escapeHtml(node.content)}</code></pre>`,
+            Header: (node, children) => `<h${node.level}${node.level <= 2 ? ' style="border-bottom: 1px solid #d1d9e0b3"' : ''}>${children.join("")}</h${node.level}>`,
+            Quote: (_node, children) => `<blockquote>${children.join("")}</blockquote>`,
+            List: (node, children) => node.ordered ? `<ol>${children.join("")}</ol>` : `<ul>${children.join("")}</ul>`,
+            ListItem: (_node, children) => `<li>${children.join("")}</li>`,
+            TaskItem: (node, children) => `<li><input type="checkbox" disabled ${node.checked ? "checked" : ""}>${children.join("")}</li>`,
+
+            //Styling nodes
             Bold: (_node, children) => `<strong>${children.join("")}</strong>`,
             Italic: (_node, children) => `<em>${children.join("")}</em>`,
-            Quote: (_node, children) => `<blockquote>${children.join("")}</blockquote>`,
+            Strikethrough: (_node, children) => `<s>${children.join("")}</s>`,
+            InlineCode: (node) => `<code>${this.escapeHtml(node.content)}</code>`,
+            
+            //Media nodes
             Link: (node) => `<a href="${node.href}">${node.text}</a>`,
             Image: (node) => `<img src="${node.src}" alt="${node.alt}"/>`,
+            
+            //Leaf nodes
+            HorizontalLine: (_node) => `<hr>`,
             Text: (node) => node.value,
         }
 
