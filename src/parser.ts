@@ -142,12 +142,8 @@ export class Parser {
             }
             let nextToken = this.peek()
             while (!this.isEnd()) {
-                if (nextToken?.type === "ListItem") {
+                if (nextToken?.type === "ListItem" || nextToken?.type === "TaskItem") {
                     result.children.push(this.parseListItem())
-                    nextToken = this.peek()
-                }
-                else if (nextToken?.type === "TaskItem") {
-                    result.children.push(this.parseTaskItem())
                     nextToken = this.peek()
                 }
                 else if (nextToken?.type === "ListEnd") {
@@ -167,43 +163,9 @@ export class Parser {
     }
 
     private parseListItem(): Node {
-        this.next() // skip marker   
-        const children: Node[] = []
-        // const children = this.parseInlineUntil("NewLine")
-        while (!this.isEnd()) {
-            const tok = this.peek()
-            if (!tok) break
-
-            if (tok.type === "NewLine") {
-                this.next()
-                continue
-            }
-
-            if (tok.type === "ListStart") {
-                children.push(this.parseList())
-                continue
-            }
-
-            if (["ListItem", "ListEnd"].includes(tok.type)) {
-                break
-            }
-
-            children.push({
-                type: "Paragraph",
-                children: this.parseInlineUntil("NewLine")
-            })
-        }
-        return {
-            type: "ListItem",
-            children: children
-        }
-    }
-
-    private parseTaskItem(): Node {
         const currentToken = this.peek()
         this.next() // skip marker   
         const children: Node[] = []
-        // const children = this.parseInlineUntil("NewLine")
         while (!this.isEnd()) {
             const tok = this.peek()
             if (!tok) break
@@ -227,10 +189,13 @@ export class Parser {
                 children: this.parseInlineUntil("NewLine")
             })
         }
-        
-        return {
+
+        return currentToken?.type === "TaskItem" ? {
             type: "TaskItem",
-            checked: currentToken?.type === "TaskItem" ? currentToken.checked : false,
+            checked: currentToken.type === "TaskItem" ? currentToken.checked : false,
+            children: children
+        } : {
+            type: "ListItem",
             children: children
         }
     }

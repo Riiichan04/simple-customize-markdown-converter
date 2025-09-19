@@ -1,4 +1,4 @@
-import { convertMarkdownToHTML } from "../src/index"
+import { convertMarkdownToHTML, RenderOption } from "../src/index"
 
 describe("Test a whole markdown", () => {
     test("A single sentences", () => {
@@ -62,5 +62,25 @@ This is also a text
         const md = "- [ ] Incomplete\n- [x] Complete"
         expect(convertMarkdownToHTML(md))
             .toBe('<ul><li><input type="checkbox" disabled ><p>Incomplete</p></li><li><input type="checkbox" disabled checked><p>Complete</p></li></ul>')
+    })
+
+    test("Basic customize render", () => {
+        const renderOptions: RenderOption = {
+            elements: {
+                Header: (node, children) => {
+                    //Customize for only Heading 1
+                    if (node.level === 1) {
+                        return `<h5 class="custom-h1">${children.join("")}</h5>`
+                    }
+                    //Keep all remain Heading
+                    return `<h${node.level}>${children.join("")}</h${node.level}>`
+                },
+                Paragraph: (_node, children) => `<div class="paragraph">${children.join("")}</div>`,
+                Bold: (_node, children) => `<b class="bold-text">${children.join("")}</b>`,
+            }
+        }
+
+        const input = "# Title\nHello **World**"
+        expect(convertMarkdownToHTML(input, renderOptions)).toBe('<h5 class="custom-h1">Title</h5><div class="paragraph">Hello <b class="bold-text">World</b></div>')
     })
 })
