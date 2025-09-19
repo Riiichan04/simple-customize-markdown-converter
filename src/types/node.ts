@@ -14,6 +14,8 @@
  * - InlineCode: Inline code snippet, with it's `content`
  * - Quote: A quote block
  * - CodeBlock: A code block, with it's `lang` and `content`
+ * - List: A list, with it's level and children
+ * - ListItem: A item of a list, with it's children
  * - Link: A link, with it's `text` and `href`
  * - Image: An image, with it's `src` and `alt`
  * - HorizontalLine: A horizontal line
@@ -25,11 +27,12 @@ export type Node =
   | { type: "Header"; level: number; children: Node[] }
   | { type: "Bold"; children: Node[] }
   | { type: "Italic"; children: Node[] }
-  | { type: "Strikethrough", children: Node[] }
+  | { type: "Strikethrough"; children: Node[] }
   | { type: "InlineCode"; content: string }
   | { type: "CodeBlock"; lang: string; content: string }
   | { type: "Quote"; children: Node[] }
-  // | { type: "ListItem"; children: Node[]; ordered: boolean; }
+  | { type: "List"; ordered: boolean; level: number; children: Node[] }
+  | { type: "ListItem"; children: Node[]; }
   | { type: "Link"; href: string; text: string }
   | { type: "Image", src: string; alt: string }
   | { type: "HorizontalLine" }

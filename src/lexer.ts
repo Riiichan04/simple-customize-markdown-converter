@@ -5,6 +5,8 @@ export default class Lexer {
     input: string
     pos: number = 0
     listToken: Token[] = []
+    // Flag for handle special syntax
+    listLevelFlag: number = 0
 
     constructor(input: string) {
         this.input = input
@@ -16,8 +18,8 @@ export default class Lexer {
      */
     tokenize(): Token[] {
         const TOKEN_HANDLER = [
-            //Handle escape character first
             {
+                //Handle escape character first
                 match: (lex: Lexer) => lex.peek() === "\\" && lex.peek(1) !== undefined,
                 emit: (lex: Lexer) => {
                     lex.next(1);
@@ -25,12 +27,31 @@ export default class Lexer {
                 }
             },
             {
+                //Regex: if line started with at least 3 characters: -, *, _
                 match: (lex: Lexer) => /^([-*_])\1{2,}$/.test(lex.peekUntil("\n").trim()) && this.getLastToken()?.type === "NewLine",
                 emit: (lex: Lexer) => lex.handleHorizontalLine()
             },
             { match: (lex: Lexer) => lex.startsWith("```"), emit: (lex: Lexer) => lex.handleCodeBlock() },
             { match: (lex: Lexer) => lex.startsWith("**"), emit: (lex: Lexer) => lex.handleBold() },
             { match: (lex: Lexer) => lex.startsWith("~~"), emit: (lex: Lexer) => lex.handleStrikethrough() },
+            {
+                //Regex: if line started with zero or more spaces, then have - or + or * + 1 space
+                match: (lex: Lexer) => lex.isStartOfLine() && /^(\s*)([-*+]) /.test(lex.peekUntil("\n")),
+                emit: (lex: Lexer) => lex.handleList(false)
+            },
+            {
+                //Regex: if line started with zero or more spaces, then have number. character + 1 space
+                match: (lex: Lexer) => lex.isStartOfLine() && /^(\s*)(\d+)\. /.test(lex.peekUntil("\n")),
+                emit: (lex: Lexer) => lex.handleList(true)
+            },
+            {
+                match: (lex: Lexer) => lex.listLevelFlag > 0 && lex.isStartOfLine() && !/^(\s*)([-+*]|\d+\.) /.test(lex.peekUntil("\n")),
+                emit: (lex: Lexer) => {
+                    while (lex.listLevelFlag > 0) {
+                        lex.handleEndList()
+                    }
+                }
+            },
             { match: (lex: Lexer) => lex.peek() === "`", emit: (lex: Lexer) => lex.handleInlineBlock() },
             { match: (lex: Lexer) => lex.peek() === "#", emit: (lex: Lexer) => lex.handleHeader() },
             { match: (lex: Lexer) => lex.peek() === "*" || lex.peek() === "_", emit: (lex: Lexer) => lex.handleItalic() },
@@ -54,6 +75,11 @@ export default class Lexer {
             }
             this.next()
         }
+
+        while (this.listLevelFlag > 0) {
+            this.handleEndList()
+        }
+
         this.listToken.push({ type: "EOF" })
         return this.listToken
     }
@@ -160,6 +186,36 @@ export default class Lexer {
         this.listToken.push({ type: "Quote" })
     }
 
+    private handleList(isOrdered: boolean) {
+        const line = this.peekUntil("\n")
+        //Regex: line started with: Group 1: zero or more spaces, group 2: (- or + or * + 1 space) or (number with . character), group 3: everything else in line
+        const m = isOrdered ? line.match(/^(\s*)(\d+)\. (.*)$/)! : line.match(/^(\s*)([-*+]) (.*)$/)!
+        const indent = Math.floor(m[1].length / 2) + 1  //m[1] to get the spaces in group 1
+        while (this.listLevelFlag < indent) {
+            this.handleStartList(isOrdered)
+        }
+        while (this.listLevelFlag > indent) {
+            this.handleEndList()
+        }
+        this.next(m[1].length + (isOrdered ? 1 : 0)) //+1 due to marker have 2 characters (e.g: 1.) instead 1 like unordered list
+        this.handleListItem()
+    }
+
+    private handleStartList(isOrder: boolean) {
+        this.listLevelFlag++
+        this.listToken.push({ type: "ListStart", level: this.listLevelFlag, ordered: isOrder })
+    }
+
+    private handleListItem() {
+        this.next() // Skip space between - and text
+        this.listToken.push({ type: "ListItem" })
+    }
+
+    private handleEndList() {
+        this.listLevelFlag === 0 ? 0 : this.listLevelFlag--
+        this.listToken.push({ type: "ListEnd" })
+    }
+
     private handleLink() {
         this.next() //Skip [
         const text = this.readUntil("]")
@@ -217,5 +273,9 @@ export default class Lexer {
             result += current
         }
         return result
+    }
+
+    private isStartOfLine(): boolean {
+        return this.pos === 0 || this.peek(-1) === "\n"
     }
 }

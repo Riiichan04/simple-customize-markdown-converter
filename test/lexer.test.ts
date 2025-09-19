@@ -93,4 +93,24 @@ describe("Lexer", () => {
             { type: "EOF" }
         ])
     })
+
+    test("Tokenize unordered list", () => {
+        const input = "- Item A\n- Item B\n- Item C";
+        const lexer = new Lexer(input);
+        const tokens = lexer.tokenize();
+
+        expect(tokens).toEqual([
+            { type: "ListStart", ordered: false, level: 1 },
+            { type: "ListItem" },
+            { type: "Text", value: "Item A" },
+            { type: "NewLine" },
+            { type: "ListItem" },
+            { type: "Text", value: "Item B" },
+            { type: "NewLine" },
+            { type: "ListItem" },
+            { type: "Text", value: "Item C" },
+            { type: "ListEnd" },
+            { type: "EOF" },
+        ])
+    })
 })

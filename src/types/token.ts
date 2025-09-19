@@ -13,6 +13,9 @@
  * - Strikethrough: Strikethrough marker (`~~`)
  * - InlineCode: Inline code snippet (`` ` ``), with its `content`.
  * - Quote: A quote block (`>`).
+ * - ListStart: Start a list
+ * - ListItem: A list's item (`* ` or `+ ` or `- ` or `number with dot`)
+ * - ListEnd: End a list
  * - Link: A link (`[text](url)`)
  * - Image: An image (`![alt](url)`)
  * - HorizontalLine: A horizontal line (`---` or `___` or `***`)
@@ -28,7 +31,9 @@ export type Token =
     | { type: "Strikethrough" }
     | { type: "InlineCode", content: string }
     | { type: "Quote" }
-    // | { type: "ListItem", ordered: boolean }
+    | { type: "ListStart", ordered: boolean, level: number }
+    | { type: "ListItem" }
+    | { type: "ListEnd" }
     | { type: "Link", text: string, href: string }
     | { type: "Image", src: string, alt: string }
     | { type: "HorizontalLine" }

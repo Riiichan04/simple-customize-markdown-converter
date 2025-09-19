@@ -32,6 +32,8 @@ export default class Renderer {
             CodeBlock: (node) => `<pre><code class="lang-${node.lang}">${this.escapeHtml(node.content)}</code></pre>`,
             Header: (node, children) => `<h${node.level}>${children.join("")}</h${node.level}>`,
             Quote: (_node, children) => `<blockquote>${children.join("")}</blockquote>`,
+            List: (node, children) => node.ordered ? `<ol>${children.join("")}</ol>` : `<ul>${children.join("")}</ul>`,
+            ListItem: (_node, children) => `<li>${children.join("")}</li>`,
 
             //Styling nodes
             Bold: (_node, children) => `<strong>${children.join("")}</strong>`,
