@@ -5,7 +5,8 @@ export default class Lexer {
     pos: number = 0
     listToken: Token[] = []
     // Flag for handle special syntax
-    listLevelFlag: number = 0
+    currentListLevel: number = 0  //For nested list
+    isHandlingTable: boolean = false  //For table
 
     constructor(input: string) {
         this.input = input
@@ -30,9 +31,6 @@ export default class Lexer {
                 match: (lex: Lexer) => /^([-*_])\1{2,}$/.test(lex.peekUntil("\n").trim()) && this.getLastToken()?.type === "NewLine",
                 emit: (lex: Lexer) => lex.handleHorizontalLine()
             },
-            { match: (lex: Lexer) => lex.startsWith("```"), emit: (lex: Lexer) => lex.handleCodeBlock() },
-            { match: (lex: Lexer) => lex.startsWith("**"), emit: (lex: Lexer) => lex.handleBold() },
-            { match: (lex: Lexer) => lex.startsWith("~~"), emit: (lex: Lexer) => lex.handleStrikethrough() },
             //For List
             {
                 match: (lex: Lexer) => lex.isStartOfLine() && /^(\s*)([-*+]) \[( |x|X)\] /.test(lex.peekUntil("\n")),
@@ -49,18 +47,27 @@ export default class Lexer {
                 emit: (lex: Lexer) => lex.handleList(true, false)
             },
             {
-                match: (lex: Lexer) => lex.listLevelFlag > 0 && lex.isStartOfLine() && !/^(\s*)([-+*]|\d+\.) /.test(lex.peekUntil("\n")),
+                match: (lex: Lexer) => lex.currentListLevel > 0 && lex.isStartOfLine() && !/^(\s*)([-+*]|\d+\.) /.test(lex.peekUntil("\n")),
                 emit: (lex: Lexer) => {
-                    while (lex.listLevelFlag > 0) {
+                    while (lex.currentListLevel > 0) {
                         lex.handleEndList()
                     }
                 }
             },
-            //For common syntax
-            { match: (lex: Lexer) => lex.peek() === "`", emit: (lex: Lexer) => lex.handleInlineBlock() },
-            { match: (lex: Lexer) => lex.peek() === "#", emit: (lex: Lexer) => lex.handleHeader() },
-            { match: (lex: Lexer) => lex.peek() === "*" || lex.peek() === "_", emit: (lex: Lexer) => lex.handleItalic() },
+            //For Table
+            {
+                match: (lex: Lexer) => lex.isStartOfLine() && /^\s*\|(.+)\|\s*$/.test(lex.peekUntil("\n")),
+                emit: (lex: Lexer) => this.handleTable()
+            },
+            //For block syntax
+            { match: (lex: Lexer) => lex.startsWith("```"), emit: (lex: Lexer) => lex.handleCodeBlock() },
             { match: (lex: Lexer) => lex.peek() === ">", emit: (lex: Lexer) => lex.handleQuoteBlock() },
+            { match: (lex: Lexer) => lex.peek() === "#", emit: (lex: Lexer) => lex.handleHeader() },
+            //For inline syntax
+            { match: (lex: Lexer) => lex.startsWith("**"), emit: (lex: Lexer) => lex.handleBold() },
+            { match: (lex: Lexer) => lex.startsWith("~~"), emit: (lex: Lexer) => lex.handleStrikethrough() },
+            { match: (lex: Lexer) => lex.peek() === "`", emit: (lex: Lexer) => lex.handleInlineBlock() },
+            { match: (lex: Lexer) => lex.peek() === "*" || lex.peek() === "_", emit: (lex: Lexer) => lex.handleItalic() },
             { match: (lex: Lexer) => lex.peek() === "[", emit: (lex: Lexer) => lex.handleLink() },
             { match: (lex: Lexer) => lex.peek() === "!" && lex.peek(1) === "[", emit: (lex: Lexer) => lex.handleImage() },
             { match: (lex: Lexer) => lex.peek() === "\n", emit: (lex: Lexer) => lex.listToken.push({ type: "NewLine" }) },
@@ -81,7 +88,7 @@ export default class Lexer {
             this.next()
         }
 
-        while (this.listLevelFlag > 0) {
+        while (this.currentListLevel > 0) {
             this.handleEndList()
         }
 
@@ -195,8 +202,8 @@ export default class Lexer {
         if (isTask) {
             const m = line.match(/^(\s*)([-*+]) \[( |x|X)\] (.*)$/)!
             const indent = Math.floor(m[1].length / 2) + 1
-            while (this.listLevelFlag < indent) this.handleStartList(false)
-            while (this.listLevelFlag > indent) this.handleEndList()
+            while (this.currentListLevel < indent) this.handleStartList(false)
+            while (this.currentListLevel > indent) this.handleEndList()
 
             this.next(m[1].length + 4)
             this.handleTaskItem(m[3].toLowerCase() === "x")
@@ -205,8 +212,8 @@ export default class Lexer {
             //Regex: line started with: Group 1: zero or more spaces, group 2: (- or + or * + 1 space) or (number with . character), group 3: everything else in line
             const m = isOrdered ? line.match(/^(\s*)(\d+)\. (.*)$/)! : line.match(/^(\s*)([-*+]) (.*)$/)!
             const indent = Math.floor(m[1].length / 2) + 1  //m[1] to get the spaces in group 1
-            while (this.listLevelFlag < indent) this.handleStartList(isOrdered)
-            while (this.listLevelFlag > indent) this.handleEndList()
+            while (this.currentListLevel < indent) this.handleStartList(isOrdered)
+            while (this.currentListLevel > indent) this.handleEndList()
 
             this.next(m[1].length + (isOrdered ? 1 : 0)) //+1 due to marker have 2 characters (e.g: 1.) instead 1 like unordered list
             this.handleListItem()
@@ -214,8 +221,8 @@ export default class Lexer {
     }
 
     private handleStartList(isOrder: boolean) {
-        this.listLevelFlag++
-        this.listToken.push({ type: "ListStart", level: this.listLevelFlag, ordered: isOrder })
+        this.currentListLevel++
+        this.listToken.push({ type: "ListStart", level: this.currentListLevel, ordered: isOrder })
     }
 
     private handleListItem() {
@@ -229,7 +236,7 @@ export default class Lexer {
     }
 
     private handleEndList() {
-        this.listLevelFlag === 0 ? 0 : this.listLevelFlag--
+        this.currentListLevel === 0 ? 0 : this.currentListLevel--
         this.listToken.push({ type: "ListEnd" })
     }
 
@@ -268,6 +275,85 @@ export default class Lexer {
     private handleHorizontalLine() {
         this.next(2) //Skip two first characters, remain will be skiped after loop
         this.listToken.push({ type: "HorizontalLine" })
+    }
+
+    //Temp handle
+    private handleTable() {
+        const line = this.peekUntil("\n").trim().replace(/^ *\|/, "").replace(/\| *$/, "")
+        const listColName: string[] = line.split("|").map(cell => cell.trim())
+        this.readUntil("\n") //Skip header
+        const listAlignment = this.handleTableAlignment()
+        this.listToken.push({
+            type: "TableHeader",
+            config: listColName.map((name, i) => ({
+                name: name,
+                align: listAlignment[i] === "right" ? "right" :
+                    listAlignment[i] === "center" ? "center" : "left"
+            }))
+        })
+
+        while (!this.isEndOfFile() && /^\s*\|(.+)\|\s*$/.test(this.peekUntil("\n"))) {
+            this.handleTableRow(listAlignment)
+        }
+        this.listToken.push({ type: "TableEnd" })
+    }
+
+    private handleTableAlignment(): string[] {
+        const line = this.peekUntil("\n").trim().replace(/^ *\|/, "").replace(/\| *$/, "")
+        return line.split("|").map(cell => {
+            const c = cell.trim()
+            if (c.startsWith(":") && c.endsWith(":")) return "center"
+            if (c.endsWith(":")) return "right"
+            return "left"
+        })
+    }
+
+    private handleTableRow(listAlignment: string[]) {
+        const line = this.peekUntil("\n").trim().replace(/^ *\|/, "").replace(/\| *$/, "")
+        this.listToken.push({ type: "TableRowStart" })
+        line.split("|").forEach((cell, index) => {
+            const cellAlign = listAlignment[index] === "right" ? "right" :
+                listAlignment[index] === "center" ? "center" : "left"
+
+            this.listToken.push({ type: "TableCellStart", align: cellAlign })
+
+            const val = cell.trim()
+            this.listToken.push(...tokenizeInline(val))
+
+            this.listToken.push({ type: "TableCellEnd" })
+        })
+        this.readUntil("\n")
+        this.listToken.push({ type: "TableRowEnd" })
+
+        //Temp function
+        const tokenizeInline = (input: string): Token[] => {
+            const INLINE_HANDLER = [
+                { match: (lex: Lexer) => lex.startsWith("**"), emit: (lex: Lexer) => lex.handleBold() },
+                { match: (lex: Lexer) => lex.startsWith("~~"), emit: (lex: Lexer) => lex.handleStrikethrough() },
+                { match: (lex: Lexer) => lex.peek() === "`", emit: (lex: Lexer) => lex.handleInlineBlock() },
+                { match: (lex: Lexer) => lex.peek() === "*" || lex.peek() === "_", emit: (lex: Lexer) => lex.handleItalic() },
+                { match: (lex: Lexer) => lex.peek() === "[", emit: (lex: Lexer) => lex.handleLink() },
+                { match: (lex: Lexer) => lex.peek() === "!" && lex.peek(1) === "[", emit: (lex: Lexer) => lex.handleImage() },
+                { match: (lex: Lexer) => lex.peek() === "\n", emit: (lex: Lexer) => lex.listToken.push({ type: "NewLine" }) }
+            ]
+            const lexer = new Lexer(input)
+            const tokens: Token[] = [];
+            while (!lexer.isEndOfFile()) {
+                let matched = false;
+                for (const rule of INLINE_HANDLER) {
+                    if (rule.match(lexer)) {
+                        rule.emit(lexer);
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) {
+                    lexer.handleTextBlock();
+                }
+                lexer.next();
+            }
+            return tokens;
+        }
     }
 
     //Utilities function

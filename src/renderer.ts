@@ -36,16 +36,23 @@ export default class Renderer {
             ListItem: (_node, children) => `<li>${children.join("")}</li>`,
             TaskItem: (node, children) => `<li><input type="checkbox" disabled ${node.checked ? "checked" : ""}>${children.join("")}</li>`,
 
+            Table: (node, children) => {
+                const currentNode = node as Node
+                if (currentNode.type === "Table")
+                    return `<table><tr>${currentNode.header.map(ele => `<th style="text-align:${ele.align}>${ele.name}</th>`).join("")}</tr>${currentNode.rows.map(rows => `<tr>${rows.map(cell =>`<td style="text-align:${cell.align}">${cell.children.join("")}</td>`).join("")}</tr>`)}</table>`
+                else return ""
+            },
+
             //Styling nodes
             Bold: (_node, children) => `<strong>${children.join("")}</strong>`,
             Italic: (_node, children) => `<em>${children.join("")}</em>`,
             Strikethrough: (_node, children) => `<s>${children.join("")}</s>`,
             InlineCode: (node) => `<code>${this.escapeHtml(node.content)}</code>`,
-            
+
             //Media nodes
             Link: (node) => `<a href="${node.href}">${node.text}</a>`,
             Image: (node) => `<img src="${node.src}" alt="${node.alt}"/>`,
-            
+
             //Leaf nodes
             HorizontalLine: (_node) => `<hr>`,
             Text: (node) => node.value,

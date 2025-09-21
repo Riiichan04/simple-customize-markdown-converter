@@ -64,6 +64,9 @@ export class Parser {
                     listNode.push(this.parseList())
                     break
                 }
+                case "TableStart": {
+                    listNode.push(this.parseTable())
+                }
                 case "NewLine": {
                     this.next() // skip
                     break
@@ -198,6 +201,47 @@ export class Parser {
             type: "ListItem",
             children: children
         }
+    }
+
+    private parseTable(): Node {
+        this.next() // skip marker
+        let currentToken = this.peek()
+        const result: Node = {
+            type: "Table",
+            header: [],
+            rows: []
+        }
+
+        let currentRow: { align: "left" | "right" | "center", children: Node[] }[] = []
+
+        while (currentToken?.type !== "TableEnd" && currentToken) {
+            switch (currentToken.type) {
+                case "TableHeader": {
+                    result.header = currentToken.config
+                    break
+                }
+                case "TableRowStart": {
+                    currentRow = []
+                    break
+                }
+                case "TableCellStart": {
+                    const align = currentToken.align ?? "left"
+                    const children = this.parseInlineUntil("TableCellEnd")
+                    currentRow.push({ align, children })
+                    break
+                }
+                case "TableRowEnd": {
+                    result.rows.push(currentRow)
+                    currentRow = []
+                    break
+                }
+                default: this.next()
+            }
+            this.next()
+            currentToken = this.peek()
+        }
+
+        return result
     }
 
     private parseLink(): Node {

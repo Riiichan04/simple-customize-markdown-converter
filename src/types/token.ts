@@ -32,12 +32,21 @@ export type Token =
     | { type: "Strikethrough" }
     | { type: "InlineCode", content: string }
     | { type: "Quote" }
-    | { type: "ListStart", ordered: boolean, level: number }
-    | { type: "ListItem" }
-    | { type: "TaskItem", checked: boolean }
-    | { type: "ListEnd" }
     | { type: "Link", text: string, href: string }
     | { type: "Image", src: string, alt: string }
     | { type: "HorizontalLine" }
     | { type: "Text", value: string }
     | { type: "EOF" }
+    //For List
+    | { type: "ListStart", ordered: boolean, level: number }
+    | { type: "ListItem" }
+    | { type: "TaskItem", checked: boolean }
+    | { type: "ListEnd" }
+    //For table
+    | { type: "TableStart" }
+    | { type: "TableEnd" }
+    | { type: "TableHeader", config: { name: string, align: "left" | "center" | "right" }[] }
+    | { type: "TableRowStart" }
+    | { type: "TableRowEnd" }
+    | { type: "TableCellStart", align?: "left" | "center" | "right" }
+    | { type: "TableCellEnd" }

@@ -34,8 +34,9 @@ export type Node =
   | { type: "Quote"; children: Node[] }
   | { type: "List"; ordered: boolean; level: number; children: Node[] }
   | { type: "ListItem"; children: Node[]; }
-  | { type: "TaskItem"; checked: boolean; children: Node[]}
+  | { type: "TaskItem"; checked: boolean; children: Node[] }
   | { type: "Link"; href: string; text: string }
   | { type: "Image", src: string; alt: string }
   | { type: "HorizontalLine" }
   | { type: "Text"; value: string }
+  | { type: "Table"; header: { name: string, align: "left" | "right" | "center" }[]; rows: { align: "left" | "right" | "center", children: Node[] }[][] }

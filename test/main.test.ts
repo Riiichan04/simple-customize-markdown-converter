@@ -1,4 +1,5 @@
 import { convertMarkdownToHTML, RenderOption } from "../src/index"
+import Lexer from "../src/lexer"
 
 describe("Test a whole markdown", () => {
     test("A single sentences", () => {
@@ -82,5 +83,36 @@ This is also a text
 
         const input = "# Title\nHello **World**"
         expect(convertMarkdownToHTML(input, renderOptions)).toBe('<h5 class="custom-h1">Title</h5><div class="paragraph">Hello <b class="bold-text">World</b></div>')
+    })
+
+    test("tokenize a simple table", () => {
+        const md = `| Name | Age |\n|:---- | ---:|\n| Alice | 23 |\n| Bob | 30 |`
+        const tokens = new Lexer(md).tokenize()
+
+        expect(tokens).toEqual([
+            {
+                type: "TableHeader",
+                config: [
+                    { name: "Name", align: "left" },
+                    { name: "Age", align: "right" },
+                ],
+            },
+            { type: "TableRowStart" },
+            { type: "TableCellStart", align: "left" },
+            { type: "Text", value: "Alice" },
+            { type: "TableCellEnd" },
+            { type: "TableCellStart", align: "right" },
+            { type: "Text", value: "23" },
+            { type: "TableCellEnd" },
+            { type: "TableRowEnd" },
+            { type: "TableRowStart" },
+            { type: "TableCellStart", align: "left" },
+            { type: "Text", value: "Bob" },
+            { type: "TableCellEnd" },
+            { type: "TableCellStart", align: "right" },
+            { type: "Text", value: "30" },
+            { type: "TableCellEnd" },
+            { type: "TableRowEnd" },
+        ])
     })
 })
