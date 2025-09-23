@@ -234,6 +234,8 @@ export class Parser {
         this.next() // skip TableStart token
         const parseRow = (): TableRow => {
             const rowStartToken = this.peek()
+            if (rowStartToken?.type !== "RowStart") return { isHeader: false, cells: [] }
+
             this.next() // skip RowStart token
             const cells: TableCell[] = []
             while (this.peek() && this.peek()!.type !== "RowEnd") {
@@ -241,17 +243,19 @@ export class Parser {
             }
             this.next() // skip RowEnd token
             return {
-                isHeader: rowStartToken?.type === "RowStart" ? rowStartToken.isHeader : false,
+                isHeader: rowStartToken.isHeader,
                 cells: cells
             }
         }
 
         const parseCell = (): TableCell => {
             const cellStartToken = this.peek()
+            if (cellStartToken?.type !== "CellStart") return { align: "left", chlidren: [] }
+
             this.next() // skip CellStart token
             const childrens = this.parseInlineUntil("CellEnd")
             return {
-                align: cellStartToken?.type === "CellStart" ? cellStartToken.align : "left",
+                align: cellStartToken.align,
                 chlidren: [{ type: "Paragraph", children: childrens }]
             }
         }
@@ -259,6 +263,7 @@ export class Parser {
         const rows: TableRow[] = []
         while (this.peek()?.type !== "TableEnd") {
             rows.push(parseRow())
+            if (this.isEnd()) break
         }
         this.next()
         return {
