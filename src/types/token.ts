@@ -41,3 +41,9 @@ export type Token =
     | { type: "HorizontalLine" }
     | { type: "Text", value: string }
     | { type: "EOF" }
+    | { type: "TableStart" }
+    | { type: "TableEnd" }
+    | { type: "RowStart", isHeader: boolean }
+    | { type: "RowEnd" }
+    | { type: "CellStart", align: "left" | "center" | "right" }
+    | { type: "CellEnd" }

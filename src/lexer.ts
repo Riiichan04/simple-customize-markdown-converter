@@ -1,3 +1,4 @@
+import { emit } from "process"
 import { Token } from "./types/token"
 
 export default class Lexer {
@@ -11,11 +12,20 @@ export default class Lexer {
         this.input = input
     }
 
+    //Reset input and other attribute
+    setInput(input: string) {
+        this.input = input
+        this.pos = 0
+        this.listLevelFlag = 0
+        this.listToken = []
+    }
+
     /**
      * Tokenize the markdown into a list of tokens.
+     * @param isEof - `True` when input is whole markdown, `False` if input is just a part of markdown.
      * @returns List of tokens
      */
-    tokenize(): Token[] {
+    tokenize(isEof = true): Token[] {
         const TOKEN_HANDLER = [
             //Handle escape character first
             {
@@ -56,6 +66,8 @@ export default class Lexer {
                     }
                 }
             },
+            //For table
+            { match: (lex: Lexer) => lex.isStartOfLine() && /^\s*\|.*\|\s*$/.test(lex.peekUntil("\n")), emit: (lex: Lexer) => lex.handleTable() },
             //For common syntax
             { match: (lex: Lexer) => lex.peek() === "`", emit: (lex: Lexer) => lex.handleInlineBlock() },
             { match: (lex: Lexer) => lex.peek() === "#", emit: (lex: Lexer) => lex.handleHeader() },
@@ -85,7 +97,7 @@ export default class Lexer {
             this.handleEndList()
         }
 
-        this.listToken.push({ type: "EOF" })
+        if (isEof) this.listToken.push({ type: "EOF" })
         return this.listToken
     }
 
@@ -112,6 +124,57 @@ export default class Lexer {
 
     private getLastToken(): Token {
         return this.listToken[this.listToken.length - 1]
+    }
+
+    private handleTable(): void {
+        const tokenizeResult: Token[] = []
+        const handler = new Lexer("")
+        const header = this.readUntil("\n", true)
+        const headerDetails = header.trim().replace(/^ *\|/, "").replace(/\| *$/, "").split("|")
+        const align = this.readUntil("\n", true)
+        const alignDetails = align.trim().replace(/^ *\|/, "").replace(/\| *$/, "").split("|")
+        if (alignDetails.length !== headerDetails.length || !alignDetails.every(c => /^:?-{3,}:?$/.test(c))) {
+            this.listToken.push({ type: "Text", value: `${header}\n${align}\n` })
+            return
+        }
+        else {
+            //Handle alignment
+            const normalizeAlign = alignDetails.map(value => {
+                if (value.startsWith(":") && value.endsWith(":")) return "center"
+                else if (value.endsWith(":")) return "right"
+                else return "left"
+            })
+
+            tokenizeResult.push({ type: "TableStart" })
+            //Handle header
+            tokenizeResult.push({ type: "RowStart", isHeader: true })
+            headerDetails.forEach((cell, index) => {
+                tokenizeResult.push({ type: "CellStart", align: normalizeAlign[index] ?? "left" })
+                handler.setInput(cell.trim())
+                tokenizeResult.push(...handler.tokenize(false))
+                tokenizeResult.push({ type: "CellEnd" })
+            })
+            tokenizeResult.push({type: "RowEnd"})
+
+            //Handle body
+            while (!this.isEndOfFile()) {
+                const body = this.readUntil("\n", true)
+                if (!body) break
+                const line = body.trim()
+                if (!line.startsWith("|") || !line.endsWith("|")) break //End of table
+                const bodyDetail = body.trim().replace(/^ *\|/, "").replace(/\| *$/, "").split("|")
+                tokenizeResult.push({ type: "RowStart", isHeader: false })
+                bodyDetail.forEach((cell, index) => {
+                    tokenizeResult.push({ type: "CellStart", align: normalizeAlign[index] ?? "left" })
+                    handler.setInput(cell.trim())
+                    tokenizeResult.push(...handler.tokenize(false))
+                    tokenizeResult.push({ type: "CellEnd" })
+                })
+                tokenizeResult.push({ type: "RowEnd" })
+            }
+            tokenizeResult.push({ type: "TableEnd" })
+            this.listToken.push(...tokenizeResult)
+        }
     }
 
     private handleHeader(): void {
@@ -271,12 +334,14 @@ export default class Lexer {
     }
 
     //Utilities function
-    private readUntil(char: string): string {
+    private readUntil(char: string, isConsumeChar = false): string {
         let result = ""
         while (this.peek() !== char) {
             result += this.peek()
             this.next()
+            if (this.isEndOfFile()) break
         }
+        if (isConsumeChar) this.next(char.length) //Make cursor skip the char
         return result
     }
 
