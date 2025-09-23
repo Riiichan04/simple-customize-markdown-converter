@@ -64,6 +64,14 @@ This is also a text
             .toBe('<ul><li><input type="checkbox" disabled ><p>Incomplete</p></li><li><input type="checkbox" disabled checked><p>Complete</p></li></ul>')
     })
 
+    test("Render table", () => {
+        const md = "| Name  | Age |\n|-------|----:|\n| Alice |  24 |\n| Bob   |  30 |";
+        expect(convertMarkdownToHTML(md)).toBe(
+            '<table><thead><tr><th style="text-align:left"><p>Name</p></th><th style="text-align:right"><p>Age</p></th></tr></thead>' +
+            '<tbody><tr><td style="text-align:left"><p>Alice</p></td><td style="text-align:right"><p>24</p></td></tr>' +
+            '<tr><td style=\"text-align:left"><p>Bob</p></td><td style="text-align:right"><p>30</p></td></tr></tbody></table>')
+    })
+
     test("Basic customize render", () => {
         const renderOptions: RenderOption = {
             elements: {
