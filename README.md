@@ -2,7 +2,7 @@
 This simple library help you convert Markdown to HTML and customize it.
 
 ## Feature
-Currently, this lib only supports:
+This library currently supports the most common Markdown syntaxes:
 - Headings (`#, ##, …`)
 - Paragraphs
 - Bold (`\*\*text\*\*`)
@@ -10,12 +10,13 @@ Currently, this lib only supports:
 - Strikethrough (`\~\~text\~\~`)
 - Inline code (`\`code\``)
 - Code blocks (`\`\`\`lang ... \`\`\``)
-- Quote (`> text`)
-- List (`- Item 1,...`)
-- Tasklist (`- [ ], - \[x\]`)
-- Link (`\[link\]\(url\)`)
-- Image (`\[alt\]\(url\)`)
-- Horizontal line (`---` or `***` or `___`)
+- Quotes (`> text`)
+- Lists (`- Item 1,...`)
+- Tasklists (`- [ ], - \[x\]`)
+- Links (`\[link\]\(url\)`)
+- Images (`\[alt\]\(url\)`)
+- Horizontal lines (`---` or `***` or `___`)
+- Tables
 
 And customizable renderer for all elements
 

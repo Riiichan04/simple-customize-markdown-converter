@@ -1,6 +1,7 @@
 import { Parser } from "../src/parser"
 import { Token } from "../src/types/token"
 import { Node } from "../src/types/node"
+import Lexer from "../src/lexer"
 
 describe("Parser", () => {
     test("Parse plain text paragraph", () => {
@@ -120,6 +121,41 @@ describe("Parser", () => {
                     ],
                 },
             ],
+        })
+    })
+
+    test("Parse table", () => {
+        const md = "| Name  | Age |\n|-------|----:|\n| Alice |  24 |\n| Bob   |  30 |";
+        const token = new Lexer(md).tokenize()
+        const parser = new Parser(token)
+        expect(parser.parse()).toEqual<Node>({
+            type: "Document",
+            children: [{
+                type: "Table",
+                rows: [
+                    {
+                        isHeader: true,
+                        cells: [
+                            { align: "left", chlidren: [{ type: "Paragraph", children: [{ type: "Text", value: "Name" }] }] },
+                            { align: "right", chlidren: [{ type: "Paragraph", children: [{ type: "Text", value: "Age" }] }] },
+                        ],
+                    },
+                    {
+                        isHeader: false,
+                        cells: [
+                            { align: "left", chlidren: [{ type: "Paragraph", children: [{ type: "Text", value: "Alice" }] }] },
+                            { align: "right", chlidren: [{ type: "Paragraph", children: [{ type: "Text", value: "24" }] }] },
+                        ],
+                    },
+                    {
+                        isHeader: false,
+                        cells: [
+                            { align: "left", chlidren: [{ type: "Paragraph", children: [{ type: "Text", value: "Bob" }] }] },
+                            { align: "right", chlidren: [{ type: "Paragraph", children: [{ type: "Text", value: "30" }] }] },
+                        ],
+                    },
+                ]
+            }]
         })
     })
 })

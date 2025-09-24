@@ -1,4 +1,4 @@
-import { Node } from "./types/node"
+import { Node, TableRow } from "./types/node"
 import { RenderOption } from "./types/renderOptions"
 
 export default class Renderer {
@@ -32,26 +32,55 @@ export default class Renderer {
             CodeBlock: (node) => `<pre><code class="lang-${node.lang}">${this.escapeHtml(node.content)}</code></pre>`,
             Header: (node, children) => `<h${node.level}${node.level <= 2 ? ' style="border-bottom: 1px solid #d1d9e0b3"' : ''}>${children.join("")}</h${node.level}>`,
             Quote: (_node, children) => `<blockquote>${children.join("")}</blockquote>`,
+
+            //For list nodes
             List: (node, children) => node.ordered ? `<ol>${children.join("")}</ol>` : `<ul>${children.join("")}</ul>`,
             ListItem: (_node, children) => `<li>${children.join("")}</li>`,
             TaskItem: (node, children) => `<li><input type="checkbox" disabled ${node.checked ? "checked" : ""}>${children.join("")}</li>`,
+
 
             //Styling nodes
             Bold: (_node, children) => `<strong>${children.join("")}</strong>`,
             Italic: (_node, children) => `<em>${children.join("")}</em>`,
             Strikethrough: (_node, children) => `<s>${children.join("")}</s>`,
             InlineCode: (node) => `<code>${this.escapeHtml(node.content)}</code>`,
-            
+
             //Media nodes
             Link: (node) => `<a href="${node.href}">${node.text}</a>`,
             Image: (node) => `<img src="${node.src}" alt="${node.alt}"/>`,
-            
+
             //Leaf nodes
             HorizontalLine: (_node) => `<hr>`,
             Text: (node) => node.value,
+
+            //For table nodes
+            Table: (node, children) => this.renderTable(node, children),
         }
 
         return this.option.elements?.[type] ?? defaultRender[type]
+    }
+
+    private renderTable(node: Node, children: string[]) {
+        if (node.type === "Table") {
+            const header = node.rows.filter(row => row.isHeader)
+            const body = node.rows.filter(row => !row.isHeader)
+
+            const renderRows = (row: TableRow) => {
+                const tag = row.isHeader ? "th" : "td"
+                const cells = row.cells.map(cell => {
+                    const align = `style="text-align:${cell.align}"`
+                    return `<${tag} ${align}>${cell.chlidren.map(c => this.render(c)).join("")}</${tag}>`
+                }).join("")
+
+                return `<tr>${cells}</tr>`
+            }
+
+            const tHead = header.length ? `<thead>${header.map(renderRows).join("")}</thead>` : ""
+            const tBody = body.length ? `<tbody>${body.map(renderRows).join("")}</tbody>` : ""
+
+            return `<table>${tHead}${tBody}</table>`
+        }
+        else return `<p>${children.join("\n")}</p>`
     }
 
     private escapeHtml(str: string) {

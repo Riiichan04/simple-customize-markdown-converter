@@ -1,4 +1,4 @@
-import { Node } from "./types/node";
+import { Node, TableCell, TableRow } from "./types/node";
 import { Token } from "./types/token";
 
 export class Parser {
@@ -62,6 +62,10 @@ export class Parser {
                 }
                 case "ListStart": {
                     listNode.push(this.parseList())
+                    break
+                }
+                case "TableStart": {
+                    listNode.push(this.parseTable())
                     break
                 }
                 case "NewLine": {
@@ -224,6 +228,48 @@ export class Parser {
             }
         }
         else return { type: "Image", src: "", alt: "" }
+    }
+
+    private parseTable(): Node {
+        this.next() // skip TableStart token
+        const parseRow = (): TableRow => {
+            const rowStartToken = this.peek()
+            if (rowStartToken?.type !== "RowStart") return { isHeader: false, cells: [] }
+
+            this.next() // skip RowStart token
+            const cells: TableCell[] = []
+            while (this.peek() && this.peek()!.type !== "RowEnd") {
+                cells.push(parseCell())
+            }
+            this.next() // skip RowEnd token
+            return {
+                isHeader: rowStartToken.isHeader,
+                cells: cells
+            }
+        }
+
+        const parseCell = (): TableCell => {
+            const cellStartToken = this.peek()
+            if (cellStartToken?.type !== "CellStart") return { align: "left", chlidren: [] }
+
+            this.next() // skip CellStart token
+            const childrens = this.parseInlineUntil("CellEnd")
+            return {
+                align: cellStartToken.align,
+                chlidren: [{ type: "Paragraph", children: childrens }]
+            }
+        }
+
+        const rows: TableRow[] = []
+        while (this.peek()?.type !== "TableEnd") {
+            rows.push(parseRow())
+            if (this.isEnd()) break
+        }
+        this.next()
+        return {
+            type: "Table",
+            rows: rows
+        }
     }
 
     private parseHorizontalLine(): Node {

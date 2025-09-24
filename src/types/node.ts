@@ -23,19 +23,31 @@
  * - Text: Raw text content.
  */
 export type Node =
-  | { type: "Document"; children: Node[] }
-  | { type: "Paragraph"; children: Node[] }
-  | { type: "Header"; level: number; children: Node[] }
-  | { type: "Bold"; children: Node[] }
-  | { type: "Italic"; children: Node[] }
-  | { type: "Strikethrough"; children: Node[] }
-  | { type: "InlineCode"; content: string }
-  | { type: "CodeBlock"; lang: string; content: string }
-  | { type: "Quote"; children: Node[] }
-  | { type: "List"; ordered: boolean; level: number; children: Node[] }
-  | { type: "ListItem"; children: Node[]; }
-  | { type: "TaskItem"; checked: boolean; children: Node[]}
-  | { type: "Link"; href: string; text: string }
-  | { type: "Image", src: string; alt: string }
-  | { type: "HorizontalLine" }
-  | { type: "Text"; value: string }
+    | { type: "Document"; children: Node[] }
+    | { type: "Paragraph"; children: Node[] }
+    | { type: "Header"; level: number; children: Node[] }
+    | { type: "Bold"; children: Node[] }
+    | { type: "Italic"; children: Node[] }
+    | { type: "Strikethrough"; children: Node[] }
+    | { type: "InlineCode"; content: string }
+    | { type: "CodeBlock"; lang: string; content: string }
+    | { type: "Quote"; children: Node[] }
+    | { type: "List"; ordered: boolean; level: number; children: Node[] }
+    | { type: "ListItem"; children: Node[]; }
+    | { type: "TaskItem"; checked: boolean; children: Node[] }
+    | { type: "Link"; href: string; text: string }
+    | { type: "Image", src: string; alt: string }
+    | { type: "HorizontalLine" }
+    | { type: "Text"; value: string }
+    | { type: "Table"; rows: TableRow[] }
+
+
+export type TableRow = {
+    isHeader: boolean,
+    cells: TableCell[]
+}
+
+export type TableCell = {
+    align: "left" | "center" | "right",
+    chlidren: Node[]
+}

@@ -113,4 +113,44 @@ describe("Lexer", () => {
             { type: "EOF" },
         ])
     })
+
+    test("should tokenize a simple table", () => {
+        const input = "| Name  | Age |\n|-------|----:|\n| Alice |  24 |\n| Bob   |  30 |";
+
+        const lexer = new Lexer(input.trim());
+        const tokens = lexer.tokenize();
+
+        expect(tokens).toEqual([
+            { type: "TableStart" },
+            { type: "RowStart", isHeader: true },
+            { type: "CellStart", align: "left" },
+            { type: "Text", value: "Name" },
+            { type: "CellEnd" },
+            { type: "CellStart", align: "right" },
+            { type: "Text", value: "Age" },
+            { type: "CellEnd" },
+            { type: "RowEnd" },
+
+            { type: "RowStart", isHeader: false },
+            { type: "CellStart", align: "left" },
+            { type: "Text", value: "Alice" },
+            { type: "CellEnd" },
+            { type: "CellStart", align: "right" },
+            { type: "Text", value: "24" },
+            { type: "CellEnd" },
+            { type: "RowEnd" },
+
+            { type: "RowStart", isHeader: false },
+            { type: "CellStart", align: "left" },
+            { type: "Text", value: "Bob" },
+            { type: "CellEnd" },
+            { type: "CellStart", align: "right" },
+            { type: "Text", value: "30" },
+            { type: "CellEnd" },
+            { type: "RowEnd" },
+
+            { type: "TableEnd" },
+            { type: "EOF" },
+        ]);
+    });
 })
