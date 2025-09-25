@@ -31,7 +31,7 @@ export default class Renderer {
             //Container nodes
             CodeBlock: (node) => `<pre><code class="lang-${node.lang}">${this.escapeHtml(node.content)}</code></pre>`,
             Header: (node, children) => `<h${node.level}${node.level <= 2 ? ' style="border-bottom: 1px solid #d1d9e0b3"' : ''}>${children.join("")}</h${node.level}>`,
-            Quote: (_node, children) => `<blockquote>${children.join("")}</blockquote>`,
+            Quote: (_node, children) => `<blockquote style="margin:0; padding:0 1em; color:#59636e; border-left:.25em solid #d1d9e0;">${children.join("")}</blockquote>`,
 
             //For list nodes
             List: (node, children) => node.ordered ? `<ol>${children.join("")}</ol>` : `<ul>${children.join("")}</ul>`,

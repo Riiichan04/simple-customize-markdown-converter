@@ -24,52 +24,52 @@ This is a text
 This is also a text
 --\\-
 `
-        expect(convertMarkdownToHTML(md)).toBe('<h1 style=\"border-bottom: 1px solid #d1d9e0b3\">Hello everyone</h1><h4>Hello world</h4><p>This is a <strong>simple</strong> paragraph with a <a href="https://example.com">link</a> and some <code>inline code</code>.</p><blockquote><p> This is a blockquote.</p></blockquote><img src="image.png" alt="Alt text"/><pre><code class="lang-js">console.log("Hello World")</code></pre><p><s>justatext</s></p><p>*thisis*escape character</p><p>This is a text</p><hr><p>This is also a text</p><p>---</p>'
+        expect(convertMarkdownToHTML(md)).toBe('<h1 style=\"border-bottom: 1px solid #d1d9e0b3\">Hello everyone</h1><h4>Hello world</h4><p>This is a <strong>simple</strong> paragraph with a <a href="https://example.com">link</a> and some <code>inline code</code>.</p><blockquote style=\"margin:0; padding:0 1em; color:#59636e; border-left:.25em solid #d1d9e0;\"><p> This is a blockquote.</p></blockquote><img src="image.png" alt="Alt text"/><pre><code class="lang-js">console.log("Hello World")</code></pre><p><s>justatext</s></p><p>*thisis*escape character</p><p>This is a text</p><hr><p>This is also a text</p><p>---</p>'
         )
     })
 
 
     test("Test render list", () => {
         const md = "- Item 1\n- Item 2\n- Item 3"
-        expect(convertMarkdownToHTML(md)).toBe('<ul><li><p>Item 1</p></li><li><p>Item 2</p></li><li><p>Item 3</p></li></ul>')
+        expect(convertMarkdownToHTML(md)).toBe('<ul><li>Item 1</li><li>Item 2</li><li>Item 3</li></ul>')
     })
 
     test("Test render nested list", () => {
         const md = "- Item 1\n  - Subitem 1.1\n  - Subitem 1.2\n- Item 2"
-        expect(convertMarkdownToHTML(md)).toBe('<ul><li><p>Item 1</p><ul><li><p>Subitem 1.1</p></li><li><p>Subitem 1.2</p></li></ul></li><li><p>Item 2</p></li></ul>')
+        expect(convertMarkdownToHTML(md)).toBe('<ul><li>Item 1<ul><li>Subitem 1.1</li><li>Subitem 1.2</li></ul></li><li>Item 2</li></ul>')
     })
 
     test("Test render 3-level nested list", () => {
         const md = "- Item 1\n  - Subitem 1.1\n    - Subsubitem 1.1.1\n  - Subitem 1.2\n- Item 2"
-        expect(convertMarkdownToHTML(md)).toBe("<ul><li><p>Item 1</p><ul><li><p>Subitem 1.1</p><ul><li><p>Subsubitem 1.1.1</p></li></ul></li><li><p>Subitem 1.2</p></li></ul></li><li><p>Item 2</p></li></ul>")
+        expect(convertMarkdownToHTML(md)).toBe("<ul><li>Item 1<ul><li>Subitem 1.1<ul><li>Subsubitem 1.1.1</li></ul></li><li>Subitem 1.2</li></ul></li><li>Item 2</li></ul>")
     })
 
     test("Test render nested ordered list", () => {
         const md = "1. Item 1\n   1. Subitem 1.1\n   2. Subitem 1.2\n2. Item 2"
         expect(convertMarkdownToHTML(md)).toBe(
-            "<ol><li><p>Item 1</p><ol><li><p>Subitem 1.1</p></li><li><p>Subitem 1.2</p></li></ol></li><li><p>Item 2</p></li></ol>"
+            "<ol><li>Item 1<ol><li>Subitem 1.1</li><li>Subitem 1.2</li></ol></li><li>Item 2</li></ol>"
         )
     })
 
     test("Test render mixed nested list", () => {
         const md = "- Item 1\n  1. Subitem 1.1\n  2. Subitem 1.2\n- Item 2"
         expect(convertMarkdownToHTML(md)).toBe(
-            '<ul><li><p>Item 1</p><ol><li><p>Subitem 1.1</p></li><li><p>Subitem 1.2</p></li></ol></li><li><p>Item 2</p></li></ul>'
+            '<ul><li>Item 1<ol><li>Subitem 1.1</li><li>Subitem 1.2</li></ol></li><li>Item 2</li></ul>'
         )
     })
 
     test("Render task list", () => {
         const md = "- [ ] Incomplete\n- [x] Complete"
         expect(convertMarkdownToHTML(md))
-            .toBe('<ul><li><input type="checkbox" disabled ><p>Incomplete</p></li><li><input type="checkbox" disabled checked><p>Complete</p></li></ul>')
+            .toBe('<ul><li><input type=\"checkbox\" disabled >Incomplete</li><li><input type=\"checkbox\" disabled checked>Complete</li></ul>')
     })
 
     test("Render table", () => {
         const md = "| Name  | Age |\n|-------|----:|\n| Alice |  24 |\n| Bob   |  30 |";
         expect(convertMarkdownToHTML(md)).toBe(
-            '<table><thead><tr><th style="text-align:left"><p>Name</p></th><th style="text-align:right"><p>Age</p></th></tr></thead>' +
-            '<tbody><tr><td style="text-align:left"><p>Alice</p></td><td style="text-align:right"><p>24</p></td></tr>' +
-            '<tr><td style=\"text-align:left"><p>Bob</p></td><td style="text-align:right"><p>30</p></td></tr></tbody></table>')
+            '<table><thead><tr><th style="text-align:left">Name</th><th style="text-align:right">Age</th></tr></thead>' +
+            '<tbody><tr><td style="text-align:left">Alice</td><td style="text-align:right">24</td></tr>' +
+            '<tr><td style=\"text-align:left">Bob</td><td style="text-align:right">30</td></tr></tbody></table>')
     })
 
     test("Basic customize render", () => {

@@ -136,22 +136,22 @@ describe("Parser", () => {
                     {
                         isHeader: true,
                         cells: [
-                            { align: "left", chlidren: [{ type: "Paragraph", children: [{ type: "Text", value: "Name" }] }] },
-                            { align: "right", chlidren: [{ type: "Paragraph", children: [{ type: "Text", value: "Age" }] }] },
+                            { align: "left", chlidren: [{ type: "Text", value: "Name" }] },
+                            { align: "right", chlidren: [{ type: "Text", value: "Age" }] },
                         ],
                     },
                     {
                         isHeader: false,
                         cells: [
-                            { align: "left", chlidren: [{ type: "Paragraph", children: [{ type: "Text", value: "Alice" }] }] },
-                            { align: "right", chlidren: [{ type: "Paragraph", children: [{ type: "Text", value: "24" }] }] },
+                            { align: "left", chlidren: [{ type: "Text", value: "Alice" }] },
+                            { align: "right", chlidren: [{ type: "Text", value: "24" }] },
                         ],
                     },
                     {
                         isHeader: false,
                         cells: [
-                            { align: "left", chlidren: [{ type: "Paragraph", children: [{ type: "Text", value: "Bob" }] }] },
-                            { align: "right", chlidren: [{ type: "Paragraph", children: [{ type: "Text", value: "30" }] }] },
+                            { align: "left", chlidren: [{ type: "Text", value: "Bob" }] },
+                            { align: "right", chlidren: [{ type: "Text", value: "30" }] },
                         ],
                     },
                 ]

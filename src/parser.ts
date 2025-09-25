@@ -188,10 +188,7 @@ export class Parser {
                 break
             }
 
-            children.push({
-                type: "Paragraph",
-                children: this.parseInlineUntil("NewLine")
-            })
+            children.push(... this.parseInlineUntil("NewLine"))
         }
 
         return currentToken?.type === "TaskItem" ? {
@@ -256,7 +253,7 @@ export class Parser {
             const childrens = this.parseInlineUntil("CellEnd")
             return {
                 align: cellStartToken.align,
-                chlidren: [{ type: "Paragraph", children: childrens }]
+                chlidren: childrens
             }
         }
 

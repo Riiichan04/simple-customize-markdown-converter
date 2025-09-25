@@ -1,4 +1,4 @@
-# Simple Custom Markdown Converter
+# Simple Customize Markdown Converter
 This simple library help you convert Markdown to HTML and customize it.
 
 ## Feature
