@@ -1,5 +1,5 @@
 import { Node, TableRow } from "./types/node"
-import { RenderOption } from "./types/renderOptions"
+import { RenderElements, RenderOption } from "./types/renderOptions"
 
 export default class Renderer {
     option: RenderOption
@@ -14,7 +14,7 @@ export default class Renderer {
      * @param node - The abstract syntax tree (AST) from the Parser
      * @returns The rendered HTML string.
      */
-    render(node: Node): string {
+    render<K extends Node["type"]>(node: Extract<Node, { type: K }>): string {
         //Get proper handler type
         const handler = this.handleRender(node.type)
         //If node have children, recursive to handle all node's children
@@ -22,8 +22,8 @@ export default class Renderer {
         return handler(node, children)
     }
 
-    private handleRender(type: Node["type"]): (node: any, children: string[]) => string {
-        const defaultRender: Record<Node["type"], (node: any, children: string[]) => string> = {
+    private handleRender<K extends Node["type"]>(type: K): NonNullable<RenderElements[K]> {
+        const defaultRender: RenderElements = {
             //Base structural nodes
             Document: (_node, children) => children.join(""),
             Paragraph: (_node, children) => `<p>${children.join("")}</p>`,
@@ -31,7 +31,7 @@ export default class Renderer {
             //Container nodes
             CodeBlock: (node) => `<pre><code class="lang-${node.lang}">${this.escapeHtml(node.content)}</code></pre>`,
             Header: (node, children) => `<h${node.level}${node.level <= 2 ? ' style="border-bottom: 1px solid #d1d9e0b3"' : ''}>${children.join("")}</h${node.level}>`,
-            Quote: (_node, children) => `<blockquote>${children.join("")}</blockquote>`,
+            Quote: (_node, children) => `<blockquote style="margin:0; padding:0 1em; color:#59636e; border-left:.25em solid #d1d9e0;">${children.join("")}</blockquote>`,
 
             //For list nodes
             List: (node, children) => node.ordered ? `<ol>${children.join("")}</ol>` : `<ul>${children.join("")}</ul>`,
@@ -57,7 +57,7 @@ export default class Renderer {
             Table: (node, children) => this.renderTable(node, children),
         }
 
-        return this.option.elements?.[type] ?? defaultRender[type]
+        return (this.option.elements?.[type] ?? defaultRender[type])!
     }
 
     private renderTable(node: Node, children: string[]) {
@@ -69,7 +69,7 @@ export default class Renderer {
                 const tag = row.isHeader ? "th" : "td"
                 const cells = row.cells.map(cell => {
                     const align = `style="text-align:${cell.align}"`
-                    return `<${tag} ${align}>${cell.chlidren.map(c => this.render(c)).join("")}</${tag}>`
+                    return `<${tag} ${align}>${cell.children.map(c => this.render(c)).join("")}</${tag}>`
                 }).join("")
 
                 return `<tr>${cells}</tr>`

@@ -85,7 +85,7 @@ describe("Renderer", () => {
             ]
         }
         const renderer = new Renderer({})
-        expect(renderer.render(node)).toBe("<blockquote><p>Hello?. This is a quote</p><p>And here is a quote too</p></blockquote>")
+        expect(renderer.render(node)).toBe("<blockquote style=\"margin:0; padding:0 1em; color:#59636e; border-left:.25em solid #d1d9e0;\"><p>Hello?. This is a quote</p><p>And here is a quote too</p></blockquote>")
     })
 
     test("Render link", () => {

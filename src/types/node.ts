@@ -49,5 +49,5 @@ export type TableRow = {
 
 export type TableCell = {
     align: "left" | "center" | "right",
-    chlidren: Node[]
+    children: Node[]
 }

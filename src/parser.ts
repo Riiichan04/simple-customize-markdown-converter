@@ -188,10 +188,7 @@ export class Parser {
                 break
             }
 
-            children.push({
-                type: "Paragraph",
-                children: this.parseInlineUntil("NewLine")
-            })
+            children.push(... this.parseInlineUntil("NewLine"))
         }
 
         return currentToken?.type === "TaskItem" ? {
@@ -250,13 +247,13 @@ export class Parser {
 
         const parseCell = (): TableCell => {
             const cellStartToken = this.peek()
-            if (cellStartToken?.type !== "CellStart") return { align: "left", chlidren: [] }
+            if (cellStartToken?.type !== "CellStart") return { align: "left", children: [] }
 
             this.next() // skip CellStart token
             const childrens = this.parseInlineUntil("CellEnd")
             return {
                 align: cellStartToken.align,
-                chlidren: [{ type: "Paragraph", children: childrens }]
+                children: childrens
             }
         }
 
