@@ -68,6 +68,10 @@ export class Parser {
                     listNode.push(this.parseTable())
                     break
                 }
+                case "HTMLBlock": {
+                    listNode.push(this.parseHtmlBlock())
+                    break
+                }
                 case "NewLine": {
                     this.next() // skip
                     break
@@ -269,13 +273,30 @@ export class Parser {
         }
     }
 
-    private parseHorizontalLine(): Node {
+    private parseHtmlBlock(): Node {
         const tok = this.peek()
+        this.next() // skip marker
+        if (tok?.type === "HTMLBlock") {
+            return { type: "HTMLBlock", value: tok.value }
+        }
+        else return { type: "Text", value: "" }
+    }
+
+    private parseHtmlInline(): Node {
+        const tok = this.peek()
+        this.next() // skip marker
+        if (tok?.type === "HTMLInline") {
+            return { type: "HTMLInline", value: tok.value }
+        }
+        else return { type: "Text", value: "" }
+    }
+
+    private parseHorizontalLine(): Node {
         this.next() // skip marker
         return { type: "HorizontalLine" }
     }
 
-    private parseInlineUntil(stopType: Token["type"] | Token["type"][]): Node[] {
+    private parseInlineUntil(stopType: Token["type"] | Token["type"][], isConsumeStopToken = true): Node[] {
         const stop = Array.isArray(stopType) ? stopType : [stopType]
         const listNode: Node[] = []
         while (!this.isEnd()) {
@@ -309,10 +330,16 @@ export class Parser {
                     listNode.push(this.parseLink())
                     break
                 }
+                case "HTMLInline": {
+                    listNode.push(this.parseHtmlInline())
+                    break
+                }
+                //Special case
+                case "HTMLBlock": return listNode
                 default: this.next()
             }
         }
-        this.next() //Skip stop token
+        if (isConsumeStopToken) this.next() //Skip stop token
         return listNode
     }
 

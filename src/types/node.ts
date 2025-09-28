@@ -21,6 +21,9 @@
  * - Image: An image, with it's `src` and `alt`
  * - HorizontalLine: A horizontal line
  * - Text: Raw text content.
+ * - Table: A table, with it's rows
+ * - HTMLBlock: A HTML block element, with it's `value`
+ * - HTMLInline: An inline HTML element, with it's `value`
  */
 export type Node =
     | { type: "Document"; children: Node[] }
@@ -40,13 +43,25 @@ export type Node =
     | { type: "HorizontalLine" }
     | { type: "Text"; value: string }
     | { type: "Table"; rows: TableRow[] }
+    | { type: "HTMLBlock", value: string }
+    | { type: "HTMLInline", value: string }
 
 
+/**
+ * A subtype represent a row of table
+ * @property isHeader - If this row is header
+ * @property cells: List cells of this row
+ */
 export type TableRow = {
     isHeader: boolean,
     cells: TableCell[]
 }
 
+/**
+ * A subtype represent a table cell
+ * @property align - Cell's align
+ * @property children - Cell's children nodes
+ */
 export type TableCell = {
     align: "left" | "center" | "right",
     children: Node[]

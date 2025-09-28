@@ -91,4 +91,9 @@ This is also a text
         const input = "# Title\nHello **World**"
         expect(convertMarkdownToHTML(input, renderOptions)).toBe('<h5 class="custom-h1">Title</h5><div class="paragraph">Hello <b class="bold-text">World</b></div>')
     })
+
+    test("Html render", () => {
+        const md = 'Hello\n<span style="color:blue">friend</span>, today is a <b>beautiful day</b> 😄<div align="center"><h2 style="color:green">🌿 Welcome to My Page 🌿</h2><p>This is an <span style="color:red">HTML block</span> that mixes inline.</p></div>'
+        expect(convertMarkdownToHTML(md)).toBe(`<p>Hello</p><p><span style="color:blue">friend</span>, today is a <b>beautiful day</b> 😄</p><div align="center"><h2 style="color:green">🌿 Welcome to My Page 🌿</h2><p>This is an <span style="color:red">HTML block</span> that mixes inline.</p></div>`);
+    })
 })

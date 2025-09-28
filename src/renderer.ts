@@ -55,6 +55,10 @@ export default class Renderer {
 
             //For table nodes
             Table: (node, children) => this.renderTable(node, children),
+
+            //For HTML
+            HTMLBlock: (node) => node.value,
+            HTMLInline: (node) => node.value
         }
 
         return (this.option.elements?.[type] ?? defaultRender[type])!
