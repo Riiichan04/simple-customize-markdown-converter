@@ -8,6 +8,7 @@ export default class Lexer {
     listToken: Token[] = []
     // Flag for handle special syntax
     listLevelFlag: number = 0
+    // listFootnote: Map<string, string> = new Map()
 
     constructor(input: string) {
         this.input = input
@@ -37,9 +38,13 @@ export default class Lexer {
                 }
             },
             //For HTML
+            //Comment
+            { match: (lex: Lexer) => lex.startsWith("<!--"), emit: (lex: Lexer) => lex.readUntilMatchString("-->", true), },
+            //Normal HTML
             {
                 match: (lex: Lexer) => lex.peek() === "<",
                 emit: (lex: Lexer) => {
+                    //Handle comment
                     const line = lex.peekUntil(">");
                     const blockRegex = /^<(h[1-6]|div|table|pre|blockquote|ul|ol|li|p|section|article|header|footer|nav|aside|hr|form|iframe)\b/i;
                     if (blockRegex.test(line)) {
@@ -49,18 +54,6 @@ export default class Lexer {
                     }
                 }
             },
-            // {
-            //     match: (lex: Lexer) => lex.isStartOfLine() && lex.peek() === "<",
-            //     emit: (lex: Lexer) => {
-            //         const line = lex.peekUntil("\n");
-            //         const blockRegex = /^<(h[1-6]|div|table|pre|blockquote|ul|ol|li|p|section|article|header|footer|nav|aside|hr|form|iframe)\b/i;
-            //         if (blockRegex.test(line)) {
-            //             lex.handleHtmlBlock();
-            //             return;
-            //         }
-            //     }
-            // },
-            { match: (lex: Lexer) => lex.peek() === "<", emit: (lex: Lexer) => lex.handleHtmlInline() },
             {
                 //Regex: if line started with at least 3 characters: -, *, _
                 match: (lex: Lexer) => /^([-*_])\1{2,}$/.test(lex.peekUntil("\n").trim()) && this.getLastToken()?.type === "NewLine",
@@ -69,7 +62,7 @@ export default class Lexer {
             { match: (lex: Lexer) => lex.startsWith("```"), emit: (lex: Lexer) => lex.handleCodeBlock() },
             { match: (lex: Lexer) => lex.startsWith("**"), emit: (lex: Lexer) => lex.handleBold() },
             { match: (lex: Lexer) => lex.startsWith("~~"), emit: (lex: Lexer) => lex.handleStrikethrough() },
-
+            // { match: (lex: Lexer) => lex.startsWith("[^"), emit: (lex: Lexer) => lex.handleFootnote() },
             //For List
             {
                 match: (lex: Lexer) => lex.isStartOfLine() && /^(\s*)([-*+]) \[( |x|X)\] /.test(lex.peekUntil("\n")),
@@ -403,6 +396,10 @@ export default class Lexer {
         this.next(closeTag.length - 1)  //Skip closing tag
         this.listToken.push({ type: "HTMLInline", value: openTag + content + closeTag });
     }
+    // private handleFootnote() {
+    //     const footNote = this.readUntil("]")
+    //     const noteId = /\[\^([^\]]+)\]/.exec(footNote)
+    // }
 
     //Utilities function    
     private readUntil(char: string, isConsumeChar = false): string {
