@@ -47,3 +47,5 @@ export type Token =
     | { type: "RowEnd" }
     | { type: "CellStart", align: "left" | "center" | "right" }
     | { type: "CellEnd" }
+    | { type: "HTMLBlock", value: string }
+    | { type: "HTMLInline", value: string }

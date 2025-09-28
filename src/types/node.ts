@@ -40,6 +40,8 @@ export type Node =
     | { type: "HorizontalLine" }
     | { type: "Text"; value: string }
     | { type: "Table"; rows: TableRow[] }
+    | { type: "HTMLBlock", value: string }
+    | { type: "HTMLInline", value: string }
 
 
 export type TableRow = {

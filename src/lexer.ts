@@ -1,5 +1,6 @@
 import { emit } from "process"
 import { Token } from "./types/token"
+import { match } from "assert"
 
 export default class Lexer {
     input: string
@@ -35,6 +36,31 @@ export default class Lexer {
                     lex.handleTextBlock()
                 }
             },
+            //For HTML
+            {
+                match: (lex: Lexer) => lex.peek() === "<",
+                emit: (lex: Lexer) => {
+                    const line = lex.peekUntil(">");
+                    const blockRegex = /^<(h[1-6]|div|table|pre|blockquote|ul|ol|li|p|section|article|header|footer|nav|aside|hr|form|iframe)\b/i;
+                    if (blockRegex.test(line)) {
+                        lex.handleHtmlBlock();
+                    } else {
+                        lex.handleHtmlInline();
+                    }
+                }
+            },
+            // {
+            //     match: (lex: Lexer) => lex.isStartOfLine() && lex.peek() === "<",
+            //     emit: (lex: Lexer) => {
+            //         const line = lex.peekUntil("\n");
+            //         const blockRegex = /^<(h[1-6]|div|table|pre|blockquote|ul|ol|li|p|section|article|header|footer|nav|aside|hr|form|iframe)\b/i;
+            //         if (blockRegex.test(line)) {
+            //             lex.handleHtmlBlock();
+            //             return;
+            //         }
+            //     }
+            // },
+            { match: (lex: Lexer) => lex.peek() === "<", emit: (lex: Lexer) => lex.handleHtmlInline() },
             {
                 //Regex: if line started with at least 3 characters: -, *, _
                 match: (lex: Lexer) => /^([-*_])\1{2,}$/.test(lex.peekUntil("\n").trim()) && this.getLastToken()?.type === "NewLine",
@@ -43,6 +69,7 @@ export default class Lexer {
             { match: (lex: Lexer) => lex.startsWith("```"), emit: (lex: Lexer) => lex.handleCodeBlock() },
             { match: (lex: Lexer) => lex.startsWith("**"), emit: (lex: Lexer) => lex.handleBold() },
             { match: (lex: Lexer) => lex.startsWith("~~"), emit: (lex: Lexer) => lex.handleStrikethrough() },
+
             //For List
             {
                 match: (lex: Lexer) => lex.isStartOfLine() && /^(\s*)([-*+]) \[( |x|X)\] /.test(lex.peekUntil("\n")),
@@ -154,7 +181,7 @@ export default class Lexer {
                 tokenizeResult.push(...handler.tokenize(false))
                 tokenizeResult.push({ type: "CellEnd" })
             })
-            tokenizeResult.push({type: "RowEnd"})
+            tokenizeResult.push({ type: "RowEnd" })
 
             //Handle body
             while (!this.isEndOfFile()) {
@@ -333,7 +360,51 @@ export default class Lexer {
         this.listToken.push({ type: "HorizontalLine" })
     }
 
-    //Utilities function
+    private handleHtmlBlock() {
+        const openTag = this.readUntil(">", true) + ">"
+        const matchTagName = /^<\s*([a-zA-Z0-9]+)/.exec(openTag)
+        const tagName = matchTagName ? matchTagName[1] : null
+        //Tagname is not valid
+        if (!tagName) {
+            this.listToken.push({ type: "Text", value: "<" })
+            return
+        }
+
+        //If it's self-closing tag
+        if (openTag.endsWith("/>") || ["hr", "img", "br", "input", "meta", "link"].includes(tagName)) {
+            this.listToken.push({ type: "HTMLBlock", value: openTag })
+            return
+        }
+
+        let content = ""
+        while (!this.isEndOfFile()) {
+            if (this.peekUntilByOffset(`</${tagName}>`.length).toLowerCase() === `</${tagName}>`) {
+                break
+            }
+            content += this.peek()
+            this.next()
+        }
+        const closeTag = `</${tagName}>`
+        this.next(closeTag.length - 1)  //Skip closing tag
+        this.listToken.push({ type: "HTMLBlock", value: openTag + content + closeTag })
+    }
+
+    private handleHtmlInline() {
+        const openTag = this.readUntil(">", true) + ">"
+        const matchTagName = /^<\s*([a-zA-Z0-9]+)/.exec(openTag)
+        const tagName = matchTagName ? matchTagName[1] : null
+        if (!tagName) {
+            this.listToken.push({ type: "Text", value: "<" })
+            return
+        }
+
+        const content = this.readUntilMatchString(`</${tagName}>`)
+        const closeTag = `</${tagName}>`
+        this.next(closeTag.length - 1)  //Skip closing tag
+        this.listToken.push({ type: "HTMLInline", value: openTag + content + closeTag });
+    }
+
+    //Utilities function    
     private readUntil(char: string, isConsumeChar = false): string {
         let result = ""
         while (this.peek() !== char) {
@@ -357,7 +428,34 @@ export default class Lexer {
         return result
     }
 
+    private peekUntilByOffset(offset: number): string {
+        let result = ""
+        let i = 0
+        while (i !== offset) {
+            const current = this.peek(i++)
+            if (current == null) break
+            if (this.isEndOfFile()) break
+            result += current
+        }
+        return result
+    }
+
     private isStartOfLine(): boolean {
         return this.pos === 0 || this.peek(-1) === "\n"
+    }
+
+    private readUntilMatchString(str: string, isConsume = false): string {
+        let result = "";
+
+        while (!this.isEndOfFile()) {
+            if (this.peekUntilByOffset(str.length) === str) {
+                if (isConsume) this.next(str.length);
+                break;
+            }
+            result += this.peek();
+            this.next();
+        }
+
+        return result;
     }
 }
