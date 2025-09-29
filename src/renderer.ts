@@ -1,11 +1,15 @@
+import { FootnoteResolver } from "./resolver"
 import { Node, TableRow } from "./types/node"
 import { RenderElements, RenderOption } from "./types/renderOptions"
 
 export default class Renderer {
     option: RenderOption
 
-    constructor(option: RenderOption) {
+    footNoteResolver: FootnoteResolver
+
+    constructor(option: RenderOption, footNoteResolver: FootnoteResolver) {
         this.option = option
+        this.footNoteResolver = footNoteResolver
     }
 
     /**
@@ -25,7 +29,7 @@ export default class Renderer {
     private handleRender<K extends Node["type"]>(type: K): NonNullable<RenderElements[K]> {
         const defaultRender: RenderElements = {
             //Base structural nodes
-            Document: (_node, children) => children.join(""),
+            Document: (_node, children) => children.join("") + this.renderFootnotes(),
             Paragraph: (_node, children) => `<p>${children.join("")}</p>`,
 
             //Container nodes
@@ -58,7 +62,13 @@ export default class Renderer {
 
             //For HTML
             HTMLBlock: (node) => node.value,
-            HTMLInline: (node) => node.value
+            HTMLInline: (node) => node.value,
+
+            //For footnote
+            FootnoteRef: (node) => {
+                const idx = this.footNoteResolver.getUsedRefById(node.id)
+                return `<sup id="fnref:${idx}"><a href="#fn:${idx}" class="footnote-ref">[${idx}]</a></sup>`
+            }
         }
 
         return (this.option.elements?.[type] ?? defaultRender[type])!
@@ -89,5 +99,21 @@ export default class Renderer {
 
     private escapeHtml(str: string) {
         return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    }
+
+    private renderFootnotes(): string {
+        if (this.footNoteResolver.isResolverValid()) {
+            const used = this.footNoteResolver.getUsedRef()
+            if (used.length === 0) return ""
+
+            const items = used.map((id, i) => {
+                const def = this.footNoteResolver.getDef(id) ?? ""
+                const idx = i + 1
+                return `<li id="fn:${idx}"><p>${def} <a href="#fnref:${idx}" class="footnote-backref">↩</a></p></li>`
+            })
+
+            return `<section class="footnotes"><ol>${items.join("")}</ol></section>`
+        }
+        else return ""
     }
 }

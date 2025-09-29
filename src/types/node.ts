@@ -45,6 +45,7 @@ export type Node =
     | { type: "Table"; rows: TableRow[] }
     | { type: "HTMLBlock", value: string }
     | { type: "HTMLInline", value: string }
+    | { type: "FootnoteRef", id: string }
 
 
 /**

@@ -2,6 +2,7 @@ import { Parser } from "../src/parser"
 import { Token } from "../src/types/token"
 import { Node } from "../src/types/node"
 import Lexer from "../src/lexer"
+import { FootnoteResolver } from "../src/resolver"
 
 describe("Parser", () => {
     test("Parse plain text paragraph", () => {
@@ -11,7 +12,7 @@ describe("Parser", () => {
             { type: "EOF" },
         ]
 
-        const parser = new Parser(tokens)
+        const parser = new Parser(tokens, new FootnoteResolver())
         const ast = parser.parse()
 
         expect(ast).toEqual<Node>({
@@ -33,7 +34,7 @@ describe("Parser", () => {
             { type: "EOF" },
         ]
 
-        const parser = new Parser(tokens)
+        const parser = new Parser(tokens, new FootnoteResolver())
         const ast = parser.parse()
 
         expect(ast).toEqual<Node>({
@@ -58,7 +59,7 @@ describe("Parser", () => {
             { type: "EOF" },
         ]
 
-        const parser = new Parser(tokens)
+        const parser = new Parser(tokens, new FootnoteResolver())
         const ast = parser.parse()
 
         expect(ast).toEqual<Node>({
@@ -84,7 +85,7 @@ describe("Parser", () => {
             { type: "EOF" },
         ]
 
-        const parser = new Parser(tokens)
+        const parser = new Parser(tokens, new FootnoteResolver())
         const ast = parser.parse()
 
         expect(ast).toEqual<Node>({
@@ -107,7 +108,7 @@ describe("Parser", () => {
             { type: "EOF" },
         ]
 
-        const parser = new Parser(tokens)
+        const parser = new Parser(tokens, new FootnoteResolver())
         const ast = parser.parse()
 
         expect(ast).toEqual<Node>({
@@ -127,7 +128,7 @@ describe("Parser", () => {
     test("Parse table", () => {
         const md = "| Name  | Age |\n|-------|----:|\n| Alice |  24 |\n| Bob   |  30 |";
         const token = new Lexer(md).tokenize()
-        const parser = new Parser(token)
+        const parser = new Parser(token, new FootnoteResolver())
         expect(parser.parse()).toEqual<Node>({
             type: "Document",
             children: [{

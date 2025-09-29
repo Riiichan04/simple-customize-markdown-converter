@@ -8,7 +8,6 @@ export default class Lexer {
     listToken: Token[] = []
     // Flag for handle special syntax
     listLevelFlag: number = 0
-    // listFootnote: Map<string, string> = new Map()
 
     constructor(input: string) {
         this.input = input
@@ -62,7 +61,10 @@ export default class Lexer {
             { match: (lex: Lexer) => lex.startsWith("```"), emit: (lex: Lexer) => lex.handleCodeBlock() },
             { match: (lex: Lexer) => lex.startsWith("**"), emit: (lex: Lexer) => lex.handleBold() },
             { match: (lex: Lexer) => lex.startsWith("~~"), emit: (lex: Lexer) => lex.handleStrikethrough() },
-            // { match: (lex: Lexer) => lex.startsWith("[^"), emit: (lex: Lexer) => lex.handleFootnote() },
+            // Footnote Definition
+            { match: (lex: Lexer) => lex.isStartOfLine() && /^\[\^[^\]]+\]:/.test(lex.peekUntil("\n")), emit: (lex: Lexer) => lex.handleFootnoteDef() },
+            // Footnote Reference
+            { match: (lex: Lexer) => lex.startsWith("[^"), emit: (lex: Lexer) => lex.handleFootnoteRef() },
             //For List
             {
                 match: (lex: Lexer) => lex.isStartOfLine() && /^(\s*)([-*+]) \[( |x|X)\] /.test(lex.peekUntil("\n")),
@@ -396,10 +398,22 @@ export default class Lexer {
         this.next(closeTag.length - 1)  //Skip closing tag
         this.listToken.push({ type: "HTMLInline", value: openTag + content + closeTag });
     }
-    // private handleFootnote() {
-    //     const footNote = this.readUntil("]")
-    //     const noteId = /\[\^([^\]]+)\]/.exec(footNote)
-    // }
+
+    private handleFootnoteDef() {
+        const line = this.readUntil("\n")
+        const match = line.match(/^\[\^([^\]]+)\]:\s*(.*)$/)
+        if (match) {
+            const id = match[1]
+            const content = match[2]
+            this.listToken.push({ type: "FootnoteDef", id, content })
+        }
+    }
+
+    private handleFootnoteRef() {
+        this.next(2) //Skip [^
+        const id = this.readUntil("]")
+        this.listToken.push({type: "FootnoteRef", id})
+    }
 
     //Utilities function    
     private readUntil(char: string, isConsumeChar = false): string {

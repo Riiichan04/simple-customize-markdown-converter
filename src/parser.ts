@@ -1,3 +1,4 @@
+import { FootnoteResolver } from "./resolver";
 import { Node, TableCell, TableRow } from "./types/node";
 import { Token } from "./types/token";
 
@@ -5,8 +6,11 @@ export class Parser {
     listToken: Token[]
     pos: number = 0
 
-    constructor(listToken: Token[]) {
+    footNoteResolver: FootnoteResolver
+
+    constructor(listToken: Token[], footNoteResolver: FootnoteResolver) {
         this.listToken = listToken
+        this.footNoteResolver = footNoteResolver
     }
 
     /**
@@ -70,6 +74,11 @@ export class Parser {
                 }
                 case "HTMLBlock": {
                     listNode.push(this.parseHtmlBlock())
+                    break
+                }
+                case "FootnoteDef": {
+                    this.parseFootnoteDef()
+                    this.next()
                     break
                 }
                 case "NewLine": {
@@ -296,6 +305,20 @@ export class Parser {
         return { type: "HorizontalLine" }
     }
 
+    private parseFootnoteDef(): void {
+        const tok = this.peek()
+        if (tok?.type !== "FootnoteDef") return
+        this.footNoteResolver.addDef(tok.id, tok.content)
+    }
+    
+    private parseFootnoteRef(): Node {
+        const tok = this.peek()
+        this.next()
+        if (tok?.type !== "FootnoteRef") return { type: "Text", value: "" }
+        this.footNoteResolver.addUsedRef(tok.id)
+        return { type: "FootnoteRef", id: tok.id }
+    }
+
     private parseInlineUntil(stopType: Token["type"] | Token["type"][], isConsumeStopToken = true): Node[] {
         const stop = Array.isArray(stopType) ? stopType : [stopType]
         const listNode: Node[] = []
@@ -332,6 +355,10 @@ export class Parser {
                 }
                 case "HTMLInline": {
                     listNode.push(this.parseHtmlInline())
+                    break
+                }
+                case "FootnoteRef": {
+                    listNode.push(this.parseFootnoteRef())
                     break
                 }
                 //Special case

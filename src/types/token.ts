@@ -56,4 +56,6 @@ export type Token =
     | { type: "CellEnd" }
     | { type: "HTMLBlock", value: string }
     | { type: "HTMLInline", value: string }
+    | { type: "FootnoteDef", id: string, content: string }
+    | { type: "FootnoteRef", id: string }
     | { type: "EOF" }
