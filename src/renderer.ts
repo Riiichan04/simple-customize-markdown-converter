@@ -42,7 +42,6 @@ export default class Renderer {
             ListItem: (_node, children) => `<li>${children.join("")}</li>`,
             TaskItem: (node, children) => `<li><input type="checkbox" disabled ${node.checked ? "checked" : ""}>${children.join("")}</li>`,
 
-
             //Styling nodes
             Bold: (_node, children) => `<strong>${children.join("")}</strong>`,
             Italic: (_node, children) => `<em>${children.join("")}</em>`,

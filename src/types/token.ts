@@ -29,6 +29,8 @@
  * - CellEnd: End of a table cell
  * - HTMLBlock: A HTML block element
  * - HTMLInline: An inline HTML element
+ * - FootnodeDef: Definition of a footnote
+ * - FootnodeRef: The reference of a footnote
  * - EOF: A special token, this is the end of input.
  */
 export type Token =
