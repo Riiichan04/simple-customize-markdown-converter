@@ -37,9 +37,13 @@ export default class Lexer {
                 }
             },
             //For HTML
+            //Comment
+            { match: (lex: Lexer) => lex.startsWith("<!--"), emit: (lex: Lexer) => lex.readUntilMatchString("-->", true), },
+            //Normal HTML
             {
                 match: (lex: Lexer) => lex.peek() === "<",
                 emit: (lex: Lexer) => {
+                    //Handle comment
                     const line = lex.peekUntil(">");
                     const blockRegex = /^<(h[1-6]|div|table|pre|blockquote|ul|ol|li|p|section|article|header|footer|nav|aside|hr|form|iframe)\b/i;
                     if (blockRegex.test(line)) {
@@ -49,18 +53,6 @@ export default class Lexer {
                     }
                 }
             },
-            // {
-            //     match: (lex: Lexer) => lex.isStartOfLine() && lex.peek() === "<",
-            //     emit: (lex: Lexer) => {
-            //         const line = lex.peekUntil("\n");
-            //         const blockRegex = /^<(h[1-6]|div|table|pre|blockquote|ul|ol|li|p|section|article|header|footer|nav|aside|hr|form|iframe)\b/i;
-            //         if (blockRegex.test(line)) {
-            //             lex.handleHtmlBlock();
-            //             return;
-            //         }
-            //     }
-            // },
-            { match: (lex: Lexer) => lex.peek() === "<", emit: (lex: Lexer) => lex.handleHtmlInline() },
             {
                 //Regex: if line started with at least 3 characters: -, *, _
                 match: (lex: Lexer) => /^([-*_])\1{2,}$/.test(lex.peekUntil("\n").trim()) && this.getLastToken()?.type === "NewLine",
@@ -69,7 +61,10 @@ export default class Lexer {
             { match: (lex: Lexer) => lex.startsWith("```"), emit: (lex: Lexer) => lex.handleCodeBlock() },
             { match: (lex: Lexer) => lex.startsWith("**"), emit: (lex: Lexer) => lex.handleBold() },
             { match: (lex: Lexer) => lex.startsWith("~~"), emit: (lex: Lexer) => lex.handleStrikethrough() },
-
+            // Footnote Definition
+            { match: (lex: Lexer) => lex.isStartOfLine() && /^\[\^[^\]]+\]:/.test(lex.peekUntil("\n")), emit: (lex: Lexer) => lex.handleFootnoteDef() },
+            // Footnote Reference
+            { match: (lex: Lexer) => lex.startsWith("[^"), emit: (lex: Lexer) => lex.handleFootnoteRef() },
             //For List
             {
                 match: (lex: Lexer) => lex.isStartOfLine() && /^(\s*)([-*+]) \[( |x|X)\] /.test(lex.peekUntil("\n")),
@@ -402,6 +397,22 @@ export default class Lexer {
         const closeTag = `</${tagName}>`
         this.next(closeTag.length - 1)  //Skip closing tag
         this.listToken.push({ type: "HTMLInline", value: openTag + content + closeTag });
+    }
+
+    private handleFootnoteDef() {
+        const line = this.readUntil("\n")
+        const match = line.match(/^\[\^([^\]]+)\]:\s*(.*)$/)
+        if (match) {
+            const id = match[1]
+            const content = match[2]
+            this.listToken.push({ type: "FootnoteDef", id, content })
+        }
+    }
+
+    private handleFootnoteRef() {
+        this.next(2) //Skip [^
+        const id = this.readUntil("]")
+        this.listToken.push({type: "FootnoteRef", id})
     }
 
     //Utilities function    

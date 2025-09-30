@@ -1,4 +1,5 @@
 import Renderer from "../src/renderer"
+import { FootnoteResolver } from "../src/resolver"
 import { Node } from "../src/types/node"
 
 describe("Renderer", () => {
@@ -12,7 +13,7 @@ describe("Renderer", () => {
                 }
             ]
         }
-        const renderer = new Renderer({})
+        const renderer = new Renderer({}, new FootnoteResolver())
         expect(renderer.render(node)).toBe("<p>Hello world</p>")
     })
 
@@ -22,7 +23,7 @@ describe("Renderer", () => {
             level: 3,
             children: [{ type: "Text", value: "Title" }]
         }
-        const renderer = new Renderer({})
+        const renderer = new Renderer({}, new FootnoteResolver())
         expect(renderer.render(node)).toBe("<h3>Title</h3>")
     })
 
@@ -36,7 +37,7 @@ describe("Renderer", () => {
             elements: {
                 Header: (_node, children) => `<h5>${children.join("")}</h5>`
             }
-        })
+        }, new FootnoteResolver())
         expect(renderer.render(node)).toBe("<h5>Title</h5>")
     })
 
@@ -45,7 +46,7 @@ describe("Renderer", () => {
             type: "InlineCode",
             content: "<script>"
         }
-        const renderer = new Renderer({})
+        const renderer = new Renderer({}, new FootnoteResolver())
         expect(renderer.render(node)).toBe("<code>&lt;script&gt;</code>")
     })
 
@@ -62,7 +63,7 @@ describe("Renderer", () => {
                 }
             ]
         }
-        const renderer = new Renderer({})
+        const renderer = new Renderer({}, new FootnoteResolver())
         expect(renderer.render(node)).toBe("<p><strong>Bold <em>Italic</em></strong></p>")
     })
 
@@ -84,7 +85,7 @@ describe("Renderer", () => {
                 }
             ]
         }
-        const renderer = new Renderer({})
+        const renderer = new Renderer({}, new FootnoteResolver())
         expect(renderer.render(node)).toBe("<blockquote style=\"margin:0; padding:0 1em; color:#59636e; border-left:.25em solid #d1d9e0;\"><p>Hello?. This is a quote</p><p>And here is a quote too</p></blockquote>")
     })
 
@@ -101,7 +102,7 @@ describe("Renderer", () => {
                 { type: "Text", value: " link" }
             ]
         }
-        const renderer = new Renderer({})
+        const renderer = new Renderer({}, new FootnoteResolver())
         expect(renderer.render(node))
             .toBe('<p>Check this <a href="https://google.com">Google</a> link</p>')
     })
@@ -118,7 +119,7 @@ describe("Renderer", () => {
                 }
             ]
         }
-        const renderer = new Renderer({})
+        const renderer = new Renderer({}, new FootnoteResolver())
         expect(renderer.render(node))
             .toBe('<p>Here is an image: <img src="https://example.com/img.png" alt="Example image"/></p>')
     })

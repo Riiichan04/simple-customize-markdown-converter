@@ -24,6 +24,7 @@
  * - Table: A table, with it's rows
  * - HTMLBlock: A HTML block element, with it's `value`
  * - HTMLInline: An inline HTML element, with it's `value`
+ * - FootnoteRef: A refernce with it's `id`
  */
 export type Node =
     | { type: "Document"; children: Node[] }
@@ -45,6 +46,7 @@ export type Node =
     | { type: "Table"; rows: TableRow[] }
     | { type: "HTMLBlock", value: string }
     | { type: "HTMLInline", value: string }
+    | { type: "FootnoteRef", id: string }
 
 
 /**

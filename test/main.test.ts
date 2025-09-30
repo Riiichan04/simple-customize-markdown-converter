@@ -96,4 +96,10 @@ This is also a text
         const md = 'Hello\n<span style="color:blue">friend</span>, today is a <b>beautiful day</b> 😄<div align="center"><h2 style="color:green">🌿 Welcome to My Page 🌿</h2><p>This is an <span style="color:red">HTML block</span> that mixes inline.</p></div>'
         expect(convertMarkdownToHTML(md)).toBe(`<p>Hello</p><p><span style="color:blue">friend</span>, today is a <b>beautiful day</b> 😄</p><div align="center"><h2 style="color:green">🌿 Welcome to My Page 🌿</h2><p>This is an <span style="color:red">HTML block</span> that mixes inline.</p></div>`);
     })
+
+    test("Footnote", () => {
+        const md = `Here is a footnote[^a] inline and another[^b]. Also repeat[^a].\n[^b]: Definition of b.\n[^a]: Definition of a.`
+        expect(convertMarkdownToHTML(md)).toBe(`<p>Here is a footnote<sup id=\"fnref:1\"><a href=\"#fn:1\" class=\"footnote-ref\">[1]</a></sup> inline and another<sup id=\"fnref:2\"><a href=\"#fn:2\" class=\"footnote-ref\">[2]</a></sup>. Also repeat<sup id=\"fnref:1\"><a href=\"#fn:1\" class=\"footnote-ref\">[1]</a></sup>.</p><section class=\"footnotes\"><ol><li id=\"fn:1\"><p>Definition of a. <a href=\"#fnref:1\" class=\"footnote-backref\">↩</a></p></li><li id=\"fn:2\"><p>Definition of b. <a href=\"#fnref:2\" class=\"footnote-backref\">↩</a></p></li></ol></section>`);
+
+    })
 })
