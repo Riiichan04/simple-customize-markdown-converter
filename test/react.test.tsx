@@ -67,8 +67,8 @@ describe("React Renderer Testing", () => {
                 }
             }
         };
-        
-        const md = "Stay **strong** [@hero](@hero)"; 
+
+        const md = "Stay **strong** [@hero](@hero)";
         const result = convertMarkdownToReactNode(md, options);
 
         expect(renderToString(result)).toBe(
@@ -102,4 +102,68 @@ describe("React Renderer Testing", () => {
             '</div>'
         );
     });
+
+    test("Custom React Render emoji (Inline transformation)", () => {
+        const options: MarkdownReactOptions = {
+            renderOptions: {
+                elements: {
+                    Text: (node: any) => renderTextWithEmojiReact(node.value)
+                }
+            }
+        };
+
+        const md = "Hello :smile:! :fire:";
+        const result = convertMarkdownToReactNode(md, options);
+        const html = renderToString(result);
+
+        expect(html).toBe(
+            '<link rel=\"preload\" as=\"image\" href=\"/assets/emoji/smile.png\"/><link rel=\"preload\" as=\"image\" href=\"/assets/emoji/fire.png\"/><p>Hello <img src=\"/assets/emoji/smile.png\" alt=\"smile\" class=\"emoji\" style=\"height:1em;vertical-align:middle\"/>! <img src=\"/assets/emoji/fire.png\" alt=\"fire\" class=\"emoji\" style=\"height:1em;vertical-align:middle\"/></p>'
+        );
+    });
+
+    test("Emoji inside other React elements (Bold)", () => {
+        const options: MarkdownReactOptions = {
+            renderOptions: {
+                elements: {
+                    Text: (node: any) => renderTextWithEmojiReact(node.value)
+                }
+            }
+        };
+
+        const md = "This is **:fire: hot**";
+        const result = convertMarkdownToReactNode(md, options);
+        const html = renderToString(result);
+        expect(html).toBe('<link rel=\"preload\" as=\"image\" href=\"/assets/emoji/fire.png\"/><p>This is <strong><img src=\"/assets/emoji/fire.png\" alt=\"fire\" class=\"emoji\" style=\"height:1em;vertical-align:middle\"/> hot</strong></p>')
+    });
 });
+
+const renderTextWithEmojiReact = (text: string): React.ReactNode[] => {
+    const emojiRegex = /:([a-z0-9_]+):/g;
+    const parts: React.ReactNode[] = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = emojiRegex.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+            parts.push(text.substring(lastIndex, match.index));
+        }
+
+        const emojiName = match[1];
+        parts.push(
+            React.createElement("img", {
+                key: `${emojiName}-${match.index}`,
+                src: `/assets/emoji/${emojiName}.png`,
+                alt: emojiName,
+                className: "emoji",
+                style: { height: "1em", verticalAlign: "middle" }
+            })
+        );
+        lastIndex = emojiRegex.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+        parts.push(text.substring(lastIndex));
+    }
+
+    return parts;
+};

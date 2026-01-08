@@ -1,4 +1,5 @@
 import { FootnoteResolver } from "../core/resolver";
+import { ConvertExtension } from "../types/extension";
 import { Node, TableCell, TableRow } from "../types/node";
 import { Token } from "../types/token";
 
@@ -8,9 +9,12 @@ export class Parser {
 
     footNoteResolver: FootnoteResolver
 
-    constructor(listToken: Token[], footNoteResolver: FootnoteResolver) {
+    extensionMap: Map<string, ConvertExtension>
+
+    constructor(listToken: Token[], footNoteResolver: FootnoteResolver, listExtension: ConvertExtension[] = []) {
         this.listToken = listToken
         this.footNoteResolver = footNoteResolver
+        this.extensionMap = new Map(listExtension.map(ext => [ext.name, ext]))
     }
 
     /**
@@ -42,6 +46,12 @@ export class Parser {
         while (!this.isEnd()) {
             const currentNode = this.peek()
             if (!currentNode) break
+
+            const extension = this.extensionMap.get(currentNode.type)
+            if (extension && extension.type === 'block') {
+                listNode.push(extension.parse(this, currentNode))
+                continue
+            }
 
             switch (currentNode.type) {
                 case "Header": {
@@ -310,7 +320,7 @@ export class Parser {
         if (tok?.type !== "FootnoteDef") return
         this.footNoteResolver.addDef(tok.id, tok.content)
     }
-    
+
     private parseFootnoteRef(): Node {
         const tok = this.peek()
         this.next()
@@ -326,6 +336,12 @@ export class Parser {
             const currentNode = this.peek()
             if (!currentNode) break
             if (stop.includes(currentNode.type)) break
+
+            const extension = this.extensionMap.get(currentNode.type)
+            if (extension && extension.type === 'inline') {
+                listNode.push(extension.parse(this, currentNode))
+                continue
+            }
 
             switch (currentNode.type) {
                 case "Bold": {

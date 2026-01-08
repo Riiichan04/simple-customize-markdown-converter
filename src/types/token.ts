@@ -1,3 +1,5 @@
+import Lexer from "../core/lexer"
+
 /**
  * Token produced by the Markdown lexer.
  *
@@ -61,3 +63,11 @@ export type Token =
     | { type: "FootnoteDef", id: string, content: string }
     | { type: "FootnoteRef", id: string }
     | { type: "EOF" }
+
+/**
+ * Define how to tokenize each token
+ */
+export type TokenizeHandler = {
+    match: (lex: Lexer) => boolean,
+    emit: (lex: Lexer) => void
+}

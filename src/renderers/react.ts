@@ -3,15 +3,19 @@ import { FootnoteResolver } from "../core/resolver"
 import { Node, TableRow } from "../types/node"
 import { ReactRenderElements, ReactRenderOption } from "../types/options/reactRenderOptions"
 import { MarkdownReactOptions } from "../types/options"
+import { ReactConvertExtension } from "../types/extension"
 
 export default class ReactRenderer {
     options: MarkdownReactOptions
 
     footNoteResolver: FootnoteResolver
 
-    constructor(footNoteResolver: FootnoteResolver, options: MarkdownReactOptions) {
+    extensionMap: Map<string, ReactConvertExtension>
+
+    constructor(footNoteResolver: FootnoteResolver, options: MarkdownReactOptions, listExtension: ReactConvertExtension[] = []) {
         this.footNoteResolver = footNoteResolver
         this.options = options
+        this.extensionMap = new Map(listExtension.map(ext => [ext.name, ext]))
     }
 
     /**
@@ -34,6 +38,11 @@ export default class ReactRenderer {
      * @returns A function take a node and its children to procude a ReactNode.
      */
     private handleRender<K extends Node["type"]>(type: K): NonNullable<ReactRenderElements[K]> {
+        const extension = this.extensionMap.get(type)
+        if (extension && "render" in extension) {
+            return extension.render
+        }
+
         const defaultRender: ReactRenderElements = {
             //Base structural nodes
             Document: (_node, children) => React.createElement(

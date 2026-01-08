@@ -48,7 +48,6 @@ export type Node =
     | { type: "HTMLInline", value: string }
     | { type: "FootnoteRef", id: string }
 
-
 /**
  * A subtype represent a row of table
  * @property isHeader - If this row is header

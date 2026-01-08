@@ -5,6 +5,7 @@ import DefaultRenderer from "./renderers/default";
 import { MarkdownDefaultOptions } from "./types/options";
 import { RenderOption } from "./types/options/renderOptions";
 import { Node } from "./types/node"
+import { HTMLConvertExtension } from "./types/extension";
 
 export { RenderOption, MarkdownDefaultOptions, Node }
 
@@ -20,12 +21,16 @@ export { RenderOption, MarkdownDefaultOptions, Node }
  * // => <p>Hello <strong>world</strong></p>
  * ```
  */
-export function convertMarkdownToHTML(input: string, options: MarkdownDefaultOptions = {
-    renderOptions: {},
-    converterOptions: { allowDangerousHtml: false }
-}): string {
-    const tokens = new Lexer(input).tokenize()
+export function convertMarkdownToHTML(
+    input: string,
+    options: MarkdownDefaultOptions = {
+        renderOptions: {},
+        converterOptions: { allowDangerousHtml: false },
+    },
+    extensions: HTMLConvertExtension[] = []
+): string {
+    const tokens = new Lexer(input, extensions).tokenize()
     const footNoteResolver = new FootnoteResolver()
-    const nodes = new Parser(tokens, footNoteResolver).parse()
-    return new DefaultRenderer(options, footNoteResolver).render(nodes)
+    const nodes = new Parser(tokens, footNoteResolver, extensions).parse()
+    return new DefaultRenderer(options, footNoteResolver, extensions).render(nodes)
 }

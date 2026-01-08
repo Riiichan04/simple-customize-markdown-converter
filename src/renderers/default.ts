@@ -1,4 +1,5 @@
 import { FootnoteResolver } from "../core/resolver"
+import { ConvertExtension, HTMLConvertExtension } from "../types/extension"
 import { Node, TableRow } from "../types/node"
 import { MarkdownDefaultOptions } from "../types/options"
 import { RenderElements, RenderOption } from "../types/options/renderOptions"
@@ -8,9 +9,12 @@ export default class DefaultRenderer {
 
     footNoteResolver: FootnoteResolver
 
-    constructor(options: MarkdownDefaultOptions, footNoteResolver: FootnoteResolver) {
+    extensionMap: Map<string, HTMLConvertExtension>
+
+    constructor(options: MarkdownDefaultOptions, footNoteResolver: FootnoteResolver, listExtension: HTMLConvertExtension[] = []) {
         this.options = options
         this.footNoteResolver = footNoteResolver
+        this.extensionMap = new Map(listExtension.map(ext => [ext.name, ext]))
     }
 
     /**
@@ -33,6 +37,11 @@ export default class DefaultRenderer {
      * @returns A function take a node and its children to procude a string.
      */
     private handleRender<K extends Node["type"]>(type: K): NonNullable<RenderElements[K]> {
+        const extension = this.extensionMap.get(type)
+        if (extension && "render" in extension) {
+            return extension.render
+        }
+
         const defaultRender: RenderElements = {
             //Base structural nodes
             Document: (_node, children) => children.join("") + this.renderFootnotes(),

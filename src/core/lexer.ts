@@ -1,16 +1,31 @@
-import { emit } from "process"
-import { Token } from "../types/token"
-import { match } from "assert"
+import { ConvertExtension } from "../types/extension"
+import { Token, TokenizeHandler } from "../types/token"
 
-export default class Lexer {
+export interface ILexer {
+    pos: number;
+    input: string;
+    listToken: Token[];
+    peek(offset?: number): string | null;
+    next(amount?: number): void;
+    startsWith(str: string): boolean;
+    readUntil(char: string, isConsume?: boolean): string;
+    peekUntil(char: string): string;
+    isEndOfFile(): boolean;
+    isStartOfLine(): boolean;
+}
+
+export default class Lexer implements ILexer {
     input: string
     pos: number = 0
     listToken: Token[] = []
     // Flag for handle special syntax
     listLevelFlag: number = 0
 
-    constructor(input: string) {
+    listExtension: ConvertExtension[]
+
+    constructor(input: string, listExtension: ConvertExtension[] = []) {
         this.input = input
+        this.listExtension = listExtension
     }
 
     //Reset input and other attribute
@@ -27,7 +42,7 @@ export default class Lexer {
      * @returns List of tokens
      */
     tokenize(isEof = true): Token[] {
-        const TOKEN_HANDLER = [
+        const TOKEN_HANDLER: TokenizeHandler[] = [
             //Handle escape character first
             {
                 match: (lex: Lexer) => lex.peek() === "\\" && lex.peek(1) !== undefined,
@@ -58,6 +73,8 @@ export default class Lexer {
                 match: (lex: Lexer) => /^([-*_])\1{2,}$/.test(lex.peekUntil("\n").trim()) && this.getLastToken()?.type === "NewLine",
                 emit: (lex: Lexer) => lex.handleHorizontalLine()
             },
+
+            //Syntax token
             { match: (lex: Lexer) => lex.startsWith("```"), emit: (lex: Lexer) => lex.handleCodeBlock() },
             { match: (lex: Lexer) => lex.startsWith("**"), emit: (lex: Lexer) => lex.handleBold() },
             { match: (lex: Lexer) => lex.startsWith("~~"), emit: (lex: Lexer) => lex.handleStrikethrough() },
@@ -98,6 +115,9 @@ export default class Lexer {
             { match: (lex: Lexer) => lex.peek() === "[", emit: (lex: Lexer) => lex.handleLink() },
             { match: (lex: Lexer) => lex.peek() === "!" && lex.peek(1) === "[", emit: (lex: Lexer) => lex.handleImage() },
             { match: (lex: Lexer) => lex.peek() === "\n", emit: (lex: Lexer) => lex.listToken.push({ type: "NewLine" }) },
+
+            //For custom token
+            ...this.listExtension.map(token => token.tokenizer),
         ]
 
         while (!this.isEndOfFile()) {
@@ -123,29 +143,85 @@ export default class Lexer {
         return this.listToken
     }
 
-
     //Get current character with offset
-    private peek(offset: number = 0) {
+    peek(offset: number = 0) {
         const i = this.pos + offset
         return i < this.input.length ? this.input[i] : null
     }
 
     //Move cursor by amount
-    private next(amount: number = 1) {
+    next(amount: number = 1) {
         this.pos += amount
     }
 
     //If current cursor startsWith given str
-    private startsWith(str: string): boolean {
+    startsWith(str: string): boolean {
         return this.input.slice(this.pos, this.pos + str.length) === str
     }
 
-    private isEndOfFile(): boolean {
+    isEndOfFile(): boolean {
         return this.pos >= this.input.length
     }
 
-    private getLastToken(): Token {
+    getLastToken(): Token {
         return this.listToken[this.listToken.length - 1]
+    }
+
+
+
+    //Utilities function    
+    readUntil(char: string, isConsumeChar = false): string {
+        let result = ""
+        while (this.peek() !== char) {
+            result += this.peek()
+            this.next()
+            if (this.isEndOfFile()) break
+        }
+        if (isConsumeChar) this.next(char.length) //Make cursor skip the char
+        return result
+    }
+
+    peekUntil(char: string): string {
+        let result = ""
+        let i = 0
+        while (true) {
+            const current = this.peek(i++)
+            if (current == null) break
+            if (current == char) break
+            result += current
+        }
+        return result
+    }
+
+    peekUntilByOffset(offset: number): string {
+        let result = ""
+        let i = 0
+        while (i !== offset) {
+            const current = this.peek(i++)
+            if (current == null) break
+            if (this.isEndOfFile()) break
+            result += current
+        }
+        return result
+    }
+
+    isStartOfLine(): boolean {
+        return this.pos === 0 || this.peek(-1) === "\n"
+    }
+
+    readUntilMatchString(str: string, isConsume = false): string {
+        let result = "";
+
+        while (!this.isEndOfFile()) {
+            if (this.peekUntilByOffset(str.length) === str) {
+                if (isConsume) this.next(str.length);
+                break;
+            }
+            result += this.peek();
+            this.next();
+        }
+
+        return result;
     }
 
     private handleTable(): void {
@@ -412,61 +488,7 @@ export default class Lexer {
     private handleFootnoteRef() {
         this.next(2) //Skip [^
         const id = this.readUntil("]")
-        this.listToken.push({type: "FootnoteRef", id})
+        this.listToken.push({ type: "FootnoteRef", id })
     }
 
-    //Utilities function    
-    private readUntil(char: string, isConsumeChar = false): string {
-        let result = ""
-        while (this.peek() !== char) {
-            result += this.peek()
-            this.next()
-            if (this.isEndOfFile()) break
-        }
-        if (isConsumeChar) this.next(char.length) //Make cursor skip the char
-        return result
-    }
-
-    private peekUntil(char: string): string {
-        let result = ""
-        let i = 0
-        while (true) {
-            const current = this.peek(i++)
-            if (current == null) break
-            if (current == char) break
-            result += current
-        }
-        return result
-    }
-
-    private peekUntilByOffset(offset: number): string {
-        let result = ""
-        let i = 0
-        while (i !== offset) {
-            const current = this.peek(i++)
-            if (current == null) break
-            if (this.isEndOfFile()) break
-            result += current
-        }
-        return result
-    }
-
-    private isStartOfLine(): boolean {
-        return this.pos === 0 || this.peek(-1) === "\n"
-    }
-
-    private readUntilMatchString(str: string, isConsume = false): string {
-        let result = "";
-
-        while (!this.isEndOfFile()) {
-            if (this.peekUntilByOffset(str.length) === str) {
-                if (isConsume) this.next(str.length);
-                break;
-            }
-            result += this.peek();
-            this.next();
-        }
-
-        return result;
-    }
 }

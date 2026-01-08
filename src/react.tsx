@@ -6,6 +6,7 @@ import { Parser } from "./core/parser";
 import ReactRenderer from "./renderers/react";
 import { MarkdownReactOptions } from "./types/options";
 import { Node } from "./types/node"
+import { ReactConvertExtension } from "./types/extension";
 
 export { MarkdownReactOptions, ReactRenderOption, Node }
 
@@ -27,11 +28,13 @@ export function convertMarkdownToReactNode(
     options: MarkdownReactOptions = {
         renderOptions: {},
         converterOptions: { allowDangerousHtml: false }
-    }): React.ReactNode {
-    const tokens = new Lexer(input).tokenize()
+    },
+    extensions: ReactConvertExtension[] = []
+): React.ReactNode {
+    const tokens = new Lexer(input, extensions).tokenize()
     const footNoteResolver = new FootnoteResolver()
-    const nodes = new Parser(tokens, footNoteResolver).parse()
-    return new ReactRenderer(footNoteResolver, options).render(nodes)
+    const nodes = new Parser(tokens, footNoteResolver, extensions).parse()
+    return new ReactRenderer(footNoteResolver, options, extensions).render(nodes)
 }
 
 /**
@@ -39,6 +42,7 @@ export function convertMarkdownToReactNode(
  * Using `React.useMemo` to ensure performance and prevent unnecessary re-render.
  * @param props.content - The Markdown source to render.
  * @param props.options - Optional configuration for the renderer. 
+ * @param props.extensions - Optional syntax extension for renderer.
  * @param props.className - Optional CSS classes for the wrapping `div` element.
  * @example
  * ```tsx
@@ -51,12 +55,13 @@ export function convertMarkdownToReactNode(
  */
 export const MarkdownComponent: React.FC<{
     content: string,
-    options?: MarkdownReactOptions
+    options?: MarkdownReactOptions,
+    extensions?: ReactConvertExtension[],
     className?: string
-}> = ({ content, className, options }) => {
+}> = ({ content, className, options, extensions = [] }) => {
     const rendered = React.useMemo(() => {
         return convertMarkdownToReactNode(content, options)
-    }, [content, options])
+    }, [content, options, extensions])
 
     return React.createElement("div", { className }, rendered)
 }
