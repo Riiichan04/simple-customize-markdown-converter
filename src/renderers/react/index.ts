@@ -1,6 +1,7 @@
 import React from "react";
 import { IRenderer } from "..";
 import { MarkdownOptions } from "../../types/options";
+import { mergeOptions } from "../../types/options";
 import { ASTNode, TableRow } from "../../types/parser";
 import { RenderStrategy } from "../../types/renderer";
 import { FootnoteResolver } from "../../core/resolver/footnote-resolver";
@@ -15,7 +16,7 @@ export class ReactRenderer implements IRenderer<React.ReactNode> {
 
     constructor(footnoteResolver: FootnoteResolver, options: MarkdownOptions<React.ReactNode> = {}, plugin: RenderStrategy<React.ReactNode>[] = []) {
         this.footnoteResolver = footnoteResolver;
-        this.options = options;
+        this.options = mergeOptions(options);
         this.registerDefaultStrategies();
         if (plugin.length > 0) plugin.forEach(p => this.registerStrategy(p))
     }

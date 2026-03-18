@@ -3,20 +3,21 @@ import { IParser, Parser } from "./core/parser"
 import { IRenderer } from "./renderers/index"
 import { DefaultRenderer } from "./renderers/default"
 import { MarkdownOptions } from "./types/options"
+import { mergeOptions } from "./types/options"
 import { Token, TokenizerStrategy } from './types/token'
 import { ASTNode, ParsingStrategy } from './types/parser'
 import { RenderStrategy } from './types/renderer'
-import { MarkdownPlugin, createPlugin } from "./types/plugin"
+import { MarkdownPlugin, createPlugin, definePlugin } from "./types/plugin"
 import { BaseConverter } from "./types/converter"
 
 export {
-    MarkdownOptions,
+    MarkdownOptions, mergeOptions,
     ILexer, IParser, IRenderer,
     Lexer, Parser, DefaultRenderer,
     Token, TokenizerStrategy,
     ASTNode, ParsingStrategy,
     RenderStrategy,
-    MarkdownPlugin, createPlugin,
+    MarkdownPlugin, createPlugin, definePlugin,
     BaseConverter,
 }
 

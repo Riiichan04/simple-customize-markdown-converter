@@ -1,6 +1,6 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { convertMarkdownToReactNode, MarkdownComponent } from '../src/react'
+import { convertMarkdownToReactNode, MarkdownComponent, definePlugin } from '../src/react'
 import { MarkdownOptions } from "../src/types/options";
 import { MarkdownPlugin } from "../src";
 import { createPlugin } from "../src/types/plugin";
@@ -162,5 +162,49 @@ describe("React Renderer Testing", () => {
         const result = convertMarkdownToReactNode(md, {}, [emojiPlugin]);
         const html = renderToString(result);
         expect(html).toBe('<p>Hello <span class="emoji emoji-omg">😲</span> world</p>');
+    });
+
+    test("definePlugin: inline pattern (:emoji:)", () => {
+        const emojiPlugin = definePlugin<"Emoji", React.ReactNode>("Emoji", "inline", {
+            pattern: /^:([^:]+):/,
+            extract: ([, value]) => ({ value }),
+            render: (node) => React.createElement(
+                "span",
+                { className: `emoji emoji-${node.value}` },
+                "😲"
+            )
+        });
+
+        const result = convertMarkdownToReactNode("Hello :omg: world", {}, [emojiPlugin]);
+        expect(renderToString(result)).toBe('<p>Hello <span class="emoji emoji-omg">😲</span> world</p>');
+    });
+
+    test("Flat options: elements shorthand in React", () => {
+        const result = convertMarkdownToReactNode("**bold** text", {
+            elements: {
+                Bold: (_node, children: React.ReactNode[]) =>
+                    React.createElement("b", { className: "flat-bold" }, ...children)
+            }
+        });
+        expect(renderToString(result)).toBe('<p><b class="flat-bold">bold</b> text</p>');
+    });
+
+    test("Flat options: className shorthand in React", () => {
+        const result = convertMarkdownToReactNode("## Header", {
+            className: { Header: "h-common", Header2: "h2-special" }
+        });
+        expect(renderToString(result)).toBe(
+            '<h2 class="h2-special" style="border-bottom:1px solid #d1d9e0b3">Header</h2>'
+        );
+    });
+
+    test("Flat options: allowDangerousHtml shorthand in React", () => {
+        const md = '<div class="raw">HTML</div>';
+        const safe = convertMarkdownToReactNode(md);
+        const unsafe = convertMarkdownToReactNode(md, { allowDangerousHtml: true });
+        // Safe: escaped inside a <code> element
+        expect(renderToString(safe)).toContain("&lt;div");
+        // Unsafe: raw HTML injected via dangerouslySetInnerHTML (React wraps it in a div)
+        expect(renderToString(unsafe)).toContain('<div class="raw">HTML</div>');
     });
 });

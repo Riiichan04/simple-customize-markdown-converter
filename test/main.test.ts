@@ -1,4 +1,4 @@
-import { convertMarkdownToHTML, MarkdownPlugin } from "../src/index";
+import { convertMarkdownToHTML, MarkdownPlugin, definePlugin } from "../src/index";
 import { RenderOption } from "../src/types/options/renderOptions";
 
 describe("Test a whole markdown", () => {
@@ -132,5 +132,73 @@ describe("Test a whole markdown", () => {
         const result = convertMarkdownToHTML(md, undefined, [emojiPlugin]);
 
         expect(result).toBe('<p>Hello <span class="emoji emoji-omg">😲</span> world</p>');
+    })
+
+    test("definePlugin: inline pattern (:emoji:)", () => {
+        const emojiPlugin = definePlugin<"Emoji", string>("Emoji", "inline", {
+            pattern: /^:([^:]+):/,
+            extract: ([, value]) => ({ value }),
+            render: (node) => `<span class="emoji emoji-${node.value}">😲</span>`
+        })
+
+        const result = convertMarkdownToHTML("Hello :omg: world", undefined, [emojiPlugin])
+        expect(result).toBe('<p>Hello <span class="emoji emoji-omg">😲</span> world</p>')
+    })
+
+    test("definePlugin: repeated inline pattern in same paragraph", () => {
+        const plugin = definePlugin<"Mark", string>("Mark", "inline", {
+            pattern: /^==([^=]+)==/,
+            extract: ([, value]) => ({ value }),
+            render: (node) => `<mark>${node.value}</mark>`
+        })
+
+        const result = convertMarkdownToHTML("This is ==highlighted== and ==also this==", undefined, [plugin])
+        expect(result).toBe('<p>This is <mark>highlighted</mark> and <mark>also this</mark></p>')
+    })
+
+    test("Flat options: elements shorthand", () => {
+        const result = convertMarkdownToHTML("# Title\nHello **World**", {
+            elements: {
+                Header: (node, children) => `<h5 class="custom-h1">${children.join("")}</h5>`,
+                Paragraph: (_node, children) => `<div class="paragraph">${children.join("")}</div>`,
+                Bold: (_node, children) => `<b>${children.join("")}</b>`,
+            }
+        })
+        expect(result).toBe('<h5 class="custom-h1">Title</h5><div class="paragraph">Hello <b>World</b></div>')
+    })
+
+    test("Flat options: className shorthand", () => {
+        const result = convertMarkdownToHTML("# Title\nParagraph content", {
+            className: {
+                Header: "common-h",
+                Header1: "main-title",
+                Paragraph: "text-muted"
+            }
+        })
+        const expected =
+            '<h1 class="main-title" style="border-bottom: 1px solid #d1d9e0b3">Title</h1>' +
+            '<p class="text-muted">Paragraph content</p>'
+        expect(result).toBe(expected)
+    })
+
+    test("Flat options: allowDangerousHtml shorthand", () => {
+        const md = '<div class="custom">Raw HTML</div>'
+        const result = convertMarkdownToHTML(md, { allowDangerousHtml: true })
+        expect(result).toBe('<div class="custom">Raw HTML</div>')
+    })
+
+    test("Flat options take priority over nested renderOptions", () => {
+        // Both flat and nested provide a Bold renderer; flat should win
+        const result = convertMarkdownToHTML("**text**", {
+            elements: {
+                Bold: (_node, children) => `<b class="flat">${children.join("")}</b>`
+            },
+            renderOptions: {
+                elements: {
+                    Bold: (_node, children) => `<strong class="nested">${children.join("")}</strong>`
+                }
+            }
+        })
+        expect(result).toBe('<p><b class="flat">text</b></p>')
     })
 })
